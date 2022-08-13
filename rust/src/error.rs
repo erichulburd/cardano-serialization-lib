@@ -184,7 +184,7 @@ pub struct JsError {
     msg: String,
 }
 
-#[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
+// #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
 impl JsError {
     pub fn from_str(s: &str) -> Self {
         Self { msg: s.to_owned() }
