@@ -190,7 +190,7 @@ fn min_fee(tx_builder: &TransactionBuilder) -> Result<Coin, CardanoError> {
     Ok(fee)
 }
 
-#[wasm_bindgen]
+
 pub enum CoinSelectionStrategyCIP2 {
     /// Performs CIP2's Largest First ada-only selection. Will error if outputs contain non-ADA assets.
     LargestFirst,
@@ -202,7 +202,7 @@ pub enum CoinSelectionStrategyCIP2 {
     RandomImproveMultiAsset,
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug)]
 pub struct TransactionBuilderConfig {
     fee_algo: fees::LinearFee,
@@ -221,7 +221,7 @@ impl TransactionBuilderConfig {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug)]
 pub struct TransactionBuilderConfigBuilder {
     fee_algo: Option<fees::LinearFee>,
@@ -234,7 +234,7 @@ pub struct TransactionBuilderConfigBuilder {
     prefer_pure_change: bool,
 }
 
-#[wasm_bindgen]
+
 impl TransactionBuilderConfigBuilder {
     pub fn new() -> Self {
         Self {
@@ -336,7 +336,7 @@ impl TransactionBuilderConfigBuilder {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug)]
 pub struct TransactionBuilder {
     config: TransactionBuilderConfig,
@@ -358,7 +358,7 @@ pub struct TransactionBuilder {
     reference_inputs: TransactionInputs,
 }
 
-#[wasm_bindgen]
+
 impl TransactionBuilder {
     /// This automatically selects and adds inputs from {inputs} consisting of just enough to cover
     /// the outputs that have already been added.

@@ -5,10 +5,10 @@ use super::*;
 // The cost-model values are taken from the genesis block - https://github.com/input-output-hk/cardano-node/blob/master/configuration/cardano/mainnet-alonzo-genesis.json#L26-L195
 // The keys on the genesis block object (operation names) are sorted plain alphabetically.
 
-#[wasm_bindgen]
+
 pub struct TxBuilderConstants();
 
-#[wasm_bindgen]
+
 impl TxBuilderConstants {
     pub fn plutus_default_cost_models() -> Costmdls {
         TxBuilderConstants::plutus_alonzo_cost_models()

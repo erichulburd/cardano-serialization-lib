@@ -3,13 +3,13 @@ use linked_hash_map::LinkedHashMap;
 
 const MD_MAX_LEN: usize = 64;
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct MetadataMap(LinkedHashMap<TransactionMetadatum, TransactionMetadatum>);
 
 to_from_bytes!(MetadataMap);
 
-#[wasm_bindgen]
+
 impl MetadataMap {
     pub fn new() -> Self {
         Self(LinkedHashMap::new())
@@ -76,13 +76,13 @@ impl MetadataMap {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct MetadataList(Vec<TransactionMetadatum>);
 
 to_from_bytes!(MetadataList);
 
-#[wasm_bindgen]
+
 impl MetadataList {
     pub fn new() -> Self {
         Self(Vec::new())
@@ -101,7 +101,7 @@ impl MetadataList {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum TransactionMetadatumKind {
     MetadataMap,
@@ -120,13 +120,13 @@ enum TransactionMetadatumEnum {
     Text(String),
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct TransactionMetadatum(TransactionMetadatumEnum);
 
 to_from_bytes!(TransactionMetadatum);
 
-#[wasm_bindgen]
+
 impl TransactionMetadatum {
     pub fn new_map(map: &MetadataMap) -> Self {
         Self(TransactionMetadatumEnum::MetadataMap(map.clone()))
@@ -252,13 +252,13 @@ impl JsonSchema for TransactionMetadatum {
 
 pub type TransactionMetadatumLabel = BigNum;
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct TransactionMetadatumLabels(Vec<TransactionMetadatumLabel>);
 
 to_from_bytes!(TransactionMetadatumLabels);
 
-#[wasm_bindgen]
+
 impl TransactionMetadatumLabels {
     pub fn new() -> Self {
         Self(Vec::new())
@@ -277,7 +277,7 @@ impl TransactionMetadatumLabels {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct GeneralTransactionMetadata(
     LinkedHashMap<TransactionMetadatumLabel, TransactionMetadatum>,
@@ -287,7 +287,7 @@ to_from_bytes!(GeneralTransactionMetadata);
 
 to_from_json!(GeneralTransactionMetadata);
 
-#[wasm_bindgen]
+
 impl GeneralTransactionMetadata {
     pub fn new() -> Self {
         Self(LinkedHashMap::new())
@@ -355,7 +355,7 @@ impl JsonSchema for GeneralTransactionMetadata {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Ord, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct AuxiliaryData {
     metadata: Option<GeneralTransactionMetadata>,
@@ -378,7 +378,7 @@ to_from_bytes!(AuxiliaryData);
 
 to_from_json!(AuxiliaryData);
 
-#[wasm_bindgen]
+
 impl AuxiliaryData {
     pub fn new() -> Self {
         Self {
@@ -415,7 +415,7 @@ impl AuxiliaryData {
 }
 
 // encodes arbitrary bytes into chunks of 64 bytes (the limit for bytes) as a list to be valid Metadata
-#[wasm_bindgen]
+
 pub fn encode_arbitrary_bytes_as_metadatum(bytes: &[u8]) -> TransactionMetadatum {
     let mut list = MetadataList::new();
     for chunk in bytes.chunks(MD_MAX_LEN) {
@@ -426,7 +426,7 @@ pub fn encode_arbitrary_bytes_as_metadatum(bytes: &[u8]) -> TransactionMetadatum
 }
 
 // decodes from chunks of bytes in a list to a byte vector if that is the metadata format, otherwise returns None
-#[wasm_bindgen]
+
 pub fn decode_arbitrary_bytes_from_metadatum(
     metadata: &TransactionMetadatum,
 ) -> Result<Vec<u8>, CardanoError> {
@@ -437,7 +437,7 @@ pub fn decode_arbitrary_bytes_from_metadatum(
     Ok(bytes)
 }
 
-#[wasm_bindgen]
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 // Different schema methods for mapping between JSON and the metadata CBOR.
 // This conversion should match TxMetadataJsonSchema in cardano-node defined (at time of writing) here:
@@ -499,7 +499,7 @@ fn bytes_to_hex_string(bytes: &[u8]) -> String {
 }
 
 // Converts JSON to Metadata according to MetadataJsonSchema
-#[wasm_bindgen]
+
 pub fn encode_json_str_to_metadatum(
     json: String,
     schema: MetadataJsonSchema,
@@ -625,7 +625,7 @@ pub fn encode_json_value_to_metadatum(
 }
 
 // Converts Metadata to JSON according to MetadataJsonSchema
-#[wasm_bindgen]
+
 pub fn decode_metadatum_to_json_str(
     metadatum: &TransactionMetadatum,
     schema: MetadataJsonSchema,

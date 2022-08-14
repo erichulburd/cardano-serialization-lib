@@ -6,7 +6,7 @@ use super::*;
 /// 2. Some fields like amounts have many ways it could be set (some depending on other field values being known)
 /// 3. Easier to adapt as the output format gets more complicated in future Cardano releases
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug)]
 pub struct TransactionOutputBuilder {
     address: Option<Address>,
@@ -14,7 +14,7 @@ pub struct TransactionOutputBuilder {
     script_ref: Option<ScriptRef>,
 }
 
-#[wasm_bindgen]
+
 impl TransactionOutputBuilder {
     pub fn new() -> Self {
         Self {
@@ -60,7 +60,7 @@ impl TransactionOutputBuilder {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug)]
 pub struct TransactionOutputAmountBuilder {
     address: Address,
@@ -69,7 +69,7 @@ pub struct TransactionOutputAmountBuilder {
     script_ref: Option<ScriptRef>,
 }
 
-#[wasm_bindgen]
+
 impl TransactionOutputAmountBuilder {
     pub fn with_value(&self, amount: &Value) -> Self {
         let mut cfg = self.clone();

@@ -7,7 +7,7 @@ pub(crate) struct TxBuilderInput {
     pub(crate) amount: Value, // we need to keep track of the amount in the inputs for input selection
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -19,7 +19,7 @@ pub struct PlutusWitness {
 
 to_from_json!(PlutusWitness);
 
-#[wasm_bindgen]
+
 impl PlutusWitness {
     pub fn new(script: &PlutusScript, datum: &PlutusData, redeemer: &Redeemer) -> Self {
         Self {
@@ -50,7 +50,7 @@ impl PlutusWitness {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -58,7 +58,7 @@ pub struct PlutusWitnesses(pub(crate) Vec<PlutusWitness>);
 
 to_from_json!(PlutusWitnesses);
 
-#[wasm_bindgen]
+
 impl PlutusWitnesses {
     pub fn new() -> Self {
         Self(Vec::new())
@@ -114,7 +114,7 @@ pub struct MockWitnessSet {
     bootstraps: BTreeSet<Vec<u8>>,
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug)]
 pub struct TxInputsBuilder {
     inputs: BTreeMap<TransactionInput, (TxBuilderInput, Option<ScriptHash>)>,
@@ -125,7 +125,7 @@ pub(crate) fn get_bootstraps(inputs: &TxInputsBuilder) -> BTreeSet<Vec<u8>> {
     inputs.input_types.bootstraps.clone()
 }
 
-#[wasm_bindgen]
+
 impl TxInputsBuilder {
     pub fn new() -> Self {
         Self {

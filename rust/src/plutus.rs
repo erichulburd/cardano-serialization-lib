@@ -12,7 +12,7 @@ use cbor_event::{
 
 use schemars::JsonSchema;
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct PlutusScript {
     bytes: Vec<u8>,
@@ -21,7 +21,7 @@ pub struct PlutusScript {
 
 to_from_bytes!(PlutusScript);
 
-#[wasm_bindgen]
+
 impl PlutusScript {
     /**
      * Creates a new Plutus script from the RAW bytes of the compiled script.
@@ -139,7 +139,7 @@ impl JsonSchema for PlutusScript {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -147,7 +147,7 @@ pub struct PlutusScripts(pub(crate) Vec<PlutusScript>);
 
 to_from_bytes!(PlutusScripts);
 
-#[wasm_bindgen]
+
 impl PlutusScripts {
     pub fn new() -> Self {
         Self(Vec::new())
@@ -196,7 +196,7 @@ impl PlutusScripts {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -207,7 +207,7 @@ pub struct ConstrPlutusData {
 
 to_from_bytes!(ConstrPlutusData);
 
-#[wasm_bindgen]
+
 impl ConstrPlutusData {
     pub fn alternative(&self) -> BigNum {
         self.alternative.clone()
@@ -257,7 +257,7 @@ impl ConstrPlutusData {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -265,7 +265,7 @@ pub struct CostModel(Vec<Int>);
 
 to_from_bytes!(CostModel);
 
-#[wasm_bindgen]
+
 impl CostModel {
     /// Creates a new CostModels instance of an unrestricted length
     pub fn new() -> Self {
@@ -310,7 +310,7 @@ impl From<Vec<i128>> for CostModel {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -318,7 +318,7 @@ pub struct Costmdls(std::collections::BTreeMap<Language, CostModel>);
 
 to_from_bytes!(Costmdls);
 
-#[wasm_bindgen]
+
 impl Costmdls {
     pub fn new() -> Self {
         Self(std::collections::BTreeMap::new())
@@ -387,7 +387,7 @@ impl Costmdls {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -398,7 +398,7 @@ pub struct ExUnitPrices {
 
 to_from_bytes!(ExUnitPrices);
 
-#[wasm_bindgen]
+
 impl ExUnitPrices {
     pub fn mem_price(&self) -> SubCoin {
         self.mem_price.clone()
@@ -416,7 +416,7 @@ impl ExUnitPrices {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -427,7 +427,7 @@ pub struct ExUnits {
 
 to_from_bytes!(ExUnits);
 
-#[wasm_bindgen]
+
 impl ExUnits {
     pub fn mem(&self) -> BigNum {
         self.mem.clone()
@@ -445,7 +445,7 @@ impl ExUnits {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone,
     Copy,
@@ -473,7 +473,7 @@ impl LanguageKind {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone,
     Copy,
@@ -490,7 +490,7 @@ pub struct Language(LanguageKind);
 
 to_from_bytes!(Language);
 
-#[wasm_bindgen]
+
 impl Language {
     pub fn new_plutus_v1() -> Self {
         Self(LanguageKind::PlutusV1)
@@ -505,13 +505,13 @@ impl Language {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
 pub struct Languages(pub(crate) Vec<Language>);
 
-#[wasm_bindgen]
+
 impl Languages {
     pub fn new() -> Self {
         Self(Vec::new())
@@ -534,7 +534,7 @@ impl Languages {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -542,7 +542,7 @@ pub struct PlutusMap(std::collections::BTreeMap<PlutusData, PlutusData>);
 
 to_from_bytes!(PlutusMap);
 
-#[wasm_bindgen]
+
 impl PlutusMap {
     pub fn new() -> Self {
         Self(std::collections::BTreeMap::new())
@@ -568,7 +568,7 @@ impl PlutusMap {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum PlutusDataKind {
     ConstrPlutusData,
@@ -589,7 +589,7 @@ pub enum PlutusDataEnum {
     Bytes(Vec<u8>),
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Ord, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct PlutusData {
     datum: PlutusDataEnum,
@@ -608,7 +608,7 @@ impl std::cmp::Eq for PlutusData {}
 
 to_from_bytes!(PlutusData);
 
-#[wasm_bindgen]
+
 impl PlutusData {
     pub fn new_constr_plutus_data(constr_plutus_data: &ConstrPlutusData) -> Self {
         Self {
@@ -696,7 +696,7 @@ impl PlutusData {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Ord, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct PlutusList {
     elems: Vec<PlutusData>,
@@ -716,7 +716,7 @@ impl std::cmp::Eq for PlutusList {}
 
 to_from_bytes!(PlutusList);
 
-#[wasm_bindgen]
+
 impl PlutusList {
     pub fn new() -> Self {
         Self {
@@ -748,7 +748,7 @@ impl From<Vec<PlutusData>> for PlutusList {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -761,7 +761,7 @@ pub struct Redeemer {
 
 to_from_bytes!(Redeemer);
 
-#[wasm_bindgen]
+
 impl Redeemer {
     pub fn tag(&self) -> RedeemerTag {
         self.tag.clone()
@@ -798,7 +798,7 @@ impl Redeemer {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Copy,
     Clone,
@@ -818,7 +818,7 @@ pub enum RedeemerTagKind {
     Reward,
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -826,7 +826,7 @@ pub struct RedeemerTag(RedeemerTagKind);
 
 to_from_bytes!(RedeemerTag);
 
-#[wasm_bindgen]
+
 impl RedeemerTag {
     pub fn new_spend() -> Self {
         Self(RedeemerTagKind::Spend)
@@ -849,7 +849,7 @@ impl RedeemerTag {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(
     Clone, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, JsonSchema,
 )]
@@ -857,7 +857,7 @@ pub struct Redeemers(pub(crate) Vec<Redeemer>);
 
 to_from_bytes!(Redeemers);
 
-#[wasm_bindgen]
+
 impl Redeemers {
     pub fn new() -> Self {
         Self(Vec::new())
@@ -893,11 +893,11 @@ impl From<Vec<Redeemer>> for Redeemers {
     }
 }
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Strings(Vec<String>);
 
-#[wasm_bindgen]
+
 impl Strings {
     pub fn new() -> Self {
         Self(Vec::new())
@@ -927,7 +927,7 @@ impl Strings {
 /// * Hex strings for bytes don't accept odd-length (half-byte) strings.
 ///      cardano-cli seems to support these however but it seems to be different than just 0-padding
 ///      on either side when tested so proceed with caution
-#[wasm_bindgen]
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum PlutusDatumSchema {
     /// ScriptDataJsonNoSchema in cardano-node.
@@ -969,7 +969,7 @@ pub enum PlutusDatumSchema {
     DetailedSchema,
 }
 
-#[wasm_bindgen]
+
 pub fn encode_json_str_to_plutus_datum(
     json: &str,
     schema: PlutusDatumSchema,
@@ -1128,7 +1128,7 @@ pub fn encode_json_value_to_plutus_datum(
     }
 }
 
-#[wasm_bindgen]
+
 pub fn decode_plutus_datum_to_json_str(
     datum: &PlutusData,
     schema: PlutusDatumSchema,

@@ -1,14 +1,14 @@
 use super::*;
 use utils::*;
 
-#[wasm_bindgen]
+
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct LinearFee {
     constant: Coin,
     coefficient: Coin,
 }
 
-#[wasm_bindgen]
+
 impl LinearFee {
     pub fn constant(&self) -> Coin {
         self.constant
@@ -26,14 +26,14 @@ impl LinearFee {
     }
 }
 
-#[wasm_bindgen]
+
 pub fn min_fee(tx: &Transaction, linear_fee: &LinearFee) -> Result<Coin, CardanoError> {
     to_bignum(tx.to_bytes().len() as u64)
         .checked_mul(&linear_fee.coefficient())?
         .checked_add(&linear_fee.constant())
 }
 
-#[wasm_bindgen]
+
 pub fn calculate_ex_units_ceil_cost(
     ex_units: &ExUnits,
     ex_unit_prices: &ExUnitPrices,
@@ -74,7 +74,7 @@ pub fn calculate_ex_units_ceil_cost(
     }
 }
 
-#[wasm_bindgen]
+
 pub fn min_script_fee(tx: &Transaction, ex_unit_prices: &ExUnitPrices) -> Result<Coin, CardanoError> {
     if let Some(redeemers) = &tx.witness_set.redeemers {
         let total_ex_units: ExUnits = redeemers.total_ex_units()?;

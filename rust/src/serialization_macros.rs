@@ -10,7 +10,7 @@ macro_rules! from_bytes {
     ($name:ident, $data: ident, $body:block) => {
         // wasm-exposed CardanoError return - CardanoError panics when used outside wasm
         #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-        #[wasm_bindgen]
+
         impl $name {
             pub fn from_bytes($data: Vec<u8>) -> Result<$name, CardanoError> {
                 Ok($body?)
@@ -38,7 +38,7 @@ macro_rules! from_bytes {
 #[macro_export]
 macro_rules! to_bytes {
     ($name:ident) => {
-        #[wasm_bindgen]
+
         impl $name {
             pub fn to_bytes(&self) -> Vec<u8> {
                 let mut buf = Serializer::new_vec();
@@ -55,7 +55,7 @@ macro_rules! from_hex {
     ($name:ident, $data: ident, $body:block) => {
         // wasm-exposed CardanoError return - CardanoError panics when used outside wasm
         #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-        #[wasm_bindgen]
+
         impl $name {
             pub fn from_hex($data: &str) -> Result<$name, CardanoError> {
                 match hex::decode($data) {
@@ -83,7 +83,7 @@ macro_rules! from_hex {
 #[macro_export]
 macro_rules! to_hex {
     ($name:ident) => {
-        #[wasm_bindgen]
+
         impl $name {
             pub fn to_hex(&self) -> String {
                 let mut buf = Serializer::new_vec();
