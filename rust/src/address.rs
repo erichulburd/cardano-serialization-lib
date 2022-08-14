@@ -228,7 +228,7 @@ impl ByronAddress {
         self.0.serialize(&mut addr_bytes).unwrap();
         addr_bytes.finalize()
     }
-    pub fn from_bytes(bytes: Vec<u8>) -> Result<ByronAddress, JsError> {
+    pub fn from_bytes(bytes: Vec<u8>) -> Result<ByronAddress, CardanoError> {
         let mut raw = Deserializer::from(std::io::Cursor::new(bytes));
         let extended_addr = ExtendedAddr::deserialize(&mut raw)?;
         Ok(ByronAddress(extended_addr))
@@ -246,7 +246,7 @@ impl ByronAddress {
         self.0.attributes.serialize(&mut attributes_bytes).unwrap();
         attributes_bytes.finalize()
     }
-    pub fn network_id(&self) -> Result<u8, JsError> {
+    pub fn network_id(&self) -> Result<u8, CardanoError> {
         // premise: during the Byron-era, we had one mainnet (764824073) and many many testnets
         // with each testnet getting a different protocol magic
         // in Shelley, this changes so that:
@@ -265,16 +265,16 @@ impl ByronAddress {
             magic if magic == NetworkInfo::testnet().protocol_magic() => {
                 Ok(NetworkInfo::testnet().network_id())
             }
-            _ => Err(JsError::new(
+            _ => Err(CardanoError::new(
                 &format! {"Unknown network {}", protocol_magic},
             )),
         }
     }
 
-    pub fn from_base58(s: &str) -> Result<ByronAddress, JsError> {
+    pub fn from_base58(s: &str) -> Result<ByronAddress, CardanoError> {
         use std::str::FromStr;
         ExtendedAddr::from_str(s)
-            .map_err(|e| JsError::new(&format! {"{:?}", e}))
+            .map_err(|e| CardanoError::new(&format! {"{:?}", e}))
             .map(ByronAddress)
     }
 
@@ -371,10 +371,10 @@ impl Address {
         hex::encode(self.to_bytes())
     }
 
-    pub fn from_hex(hex_str: &str) -> Result<Address, JsError> {
+    pub fn from_hex(hex_str: &str) -> Result<Address, CardanoError> {
         match hex::decode(hex_str) {
             Ok(data) => Ok(Self::from_bytes_impl(data.as_ref())?),
-            Err(e) => Err(JsError::new(&e.to_string())),
+            Err(e) => Err(CardanoError::new(&e.to_string())),
         }
     }
 
@@ -558,7 +558,7 @@ impl Address {
         .map_err(|e| e.annotate("Address"))
     }
 
-    pub fn to_bech32(&self, prefix: Option<String>) -> Result<String, JsError> {
+    pub fn to_bech32(&self, prefix: Option<String>) -> Result<String, CardanoError> {
         let final_prefix = match prefix {
             Some(prefix) => prefix,
             None => {
@@ -575,17 +575,17 @@ impl Address {
             }
         };
         bech32::encode(&final_prefix, self.to_bytes().to_base32())
-            .map_err(|e| JsError::new(&format! {"{:?}", e}))
+            .map_err(|e| CardanoError::new(&format! {"{:?}", e}))
     }
 
-    pub fn from_bech32(bech_str: &str) -> Result<Address, JsError> {
+    pub fn from_bech32(bech_str: &str) -> Result<Address, CardanoError> {
         let (_hrp, u5data) =
-            bech32::decode(bech_str).map_err(|e| JsError::new(&e.to_string()))?;
+            bech32::decode(bech_str).map_err(|e| CardanoError::new(&e.to_string()))?;
         let data: Vec<u8> = bech32::FromBase32::from_base32(&u5data).unwrap();
         Ok(Self::from_bytes_impl(data.as_ref())?)
     }
 
-    pub fn network_id(&self) -> Result<u8, JsError> {
+    pub fn network_id(&self) -> Result<u8, CardanoError> {
         match &self.0 {
             AddrType::Base(a) => Ok(a.network),
             AddrType::Enterprise(a) => Ok(a.network),
@@ -813,15 +813,15 @@ impl Pointer {
         }
     }
 
-    pub fn slot(&self) -> Result<u32, JsError> {
+    pub fn slot(&self) -> Result<u32, CardanoError> {
         self.slot.clone().try_into()
     }
 
-    pub fn tx_index(&self) -> Result<u32, JsError> {
+    pub fn tx_index(&self) -> Result<u32, CardanoError> {
         self.tx_index.clone().try_into()
     }
 
-    pub fn cert_index(&self) -> Result<u32, JsError> {
+    pub fn cert_index(&self) -> Result<u32, CardanoError> {
         self.cert_index.clone().try_into()
     }
 

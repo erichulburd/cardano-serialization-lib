@@ -1,6 +1,7 @@
 use super::*;
 use crate::chain_crypto;
 use cbor_event::{self};
+use serde::de::StdError;
 
 // This file was code-generated using an experimental CDDL to rust tool:
 // https://github.com/Emurgo/cddl-codegen
@@ -35,7 +36,7 @@ pub enum DeserializeFailure {
         expected: Key,
     },
     MandatoryFieldMissing(Key),
-    Metadata(JsError),
+    Metadata(CardanoError),
     NoVariantMatched,
     OutOfRange {
         min: usize,
@@ -74,6 +75,8 @@ impl DeserializeError {
         }
     }
 }
+
+impl StdError for DeserializeError {}
 
 impl std::fmt::Display for DeserializeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -130,9 +133,9 @@ impl std::fmt::Display for DeserializeError {
     }
 }
 
-impl From<DeserializeError> for JsError {
-    fn from(e: DeserializeError) -> JsError {
-        JsError::new(&e.to_string())
+impl From<DeserializeError> for CardanoError {
+    fn from(e: DeserializeError) -> CardanoError {
+        CardanoError::new(&e.to_string())
     }
 }
 
@@ -172,20 +175,12 @@ impl From<chain_crypto::PublicKeyError> for DeserializeError {
     }
 }
 
-// Generic string error that is replaced with JsError on wasm builds but still usable from non-wasm builds
-// since JsError panics when used for non-constants in non-wasm builds even just creating one
-
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-pub type JsError = JsValue;
-
-#[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
 #[derive(Debug, Clone)]
-pub struct JsError {
+pub struct CardanoError {
     msg: String,
 }
 
-#[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
-impl JsError {
+impl CardanoError {
     pub fn new(s: &str) -> Self {
         Self { msg: s.to_owned() }
     }
@@ -196,8 +191,7 @@ impl JsError {
     }
 }
 
-#[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
-impl std::fmt::Display for JsError {
+impl std::fmt::Display for CardanoError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.msg)
     }

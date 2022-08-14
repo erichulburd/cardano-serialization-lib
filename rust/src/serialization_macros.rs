@@ -1,6 +1,6 @@
-// JsError can't be used by non-wasm targets so we use this macro to expose
-// either a DeserializeError or a JsError error depending on if we're on a
-// wasm or a non-wasm target where JsError is not available (it panics!).
+// CardanoError can't be used by non-wasm targets so we use this macro to expose
+// either a DeserializeError or a CardanoError error depending on if we're on a
+// wasm or a non-wasm target where CardanoError is not available (it panics!).
 // Note: wasm-bindgen doesn't support macros inside impls, so we have to wrap these
 //       in their own impl and invoke the invoke the macro from global scope.
 // TODO: possibly write s generic version of this for other usages (e.g. PrivateKey, etc)
@@ -8,11 +8,11 @@
 macro_rules! from_bytes {
     // Custom from_bytes() code
     ($name:ident, $data: ident, $body:block) => {
-        // wasm-exposed JsError return - JsError panics when used outside wasm
+        // wasm-exposed CardanoError return - CardanoError panics when used outside wasm
         #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
         #[wasm_bindgen]
         impl $name {
-            pub fn from_bytes($data: Vec<u8>) -> Result<$name, JsError> {
+            pub fn from_bytes($data: Vec<u8>) -> Result<$name, CardanoError> {
                 Ok($body?)
             }
         }
@@ -53,14 +53,14 @@ macro_rules! to_bytes {
 macro_rules! from_hex {
     // Custom from_bytes() code
     ($name:ident, $data: ident, $body:block) => {
-        // wasm-exposed JsError return - JsError panics when used outside wasm
+        // wasm-exposed CardanoError return - CardanoError panics when used outside wasm
         #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
         #[wasm_bindgen]
         impl $name {
-            pub fn from_hex($data: &str) -> Result<$name, JsError> {
+            pub fn from_hex($data: &str) -> Result<$name, CardanoError> {
                 match hex::decode($data) {
                     Ok(_) => Ok($body?),
-                    Err(e) => Err(JsError::new(&e.to_string()))
+                    Err(e) => Err(CardanoError::new(&e.to_string()))
                 }
 
             }

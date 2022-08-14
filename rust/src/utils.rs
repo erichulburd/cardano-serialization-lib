@@ -34,20 +34,20 @@ macro_rules! to_from_json {
     ($name:ident) => {
         #[wasm_bindgen]
         impl $name {
-            pub fn to_json(&self) -> Result<String, JsError> {
+            pub fn to_json(&self) -> Result<String, CardanoError> {
                 serde_json::to_string_pretty(&self)
-                    .map_err(|e| JsError::new(&format!("to_json: {}", e)))
+                    .map_err(|e| CardanoError::new(&format!("to_json: {}", e)))
             }
 
             #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-            pub fn to_js_value(&self) -> Result<JsValue, JsError> {
+            pub fn to_js_value(&self) -> Result<JsValue, CardanoError> {
                 JsValue::from_serde(&self)
-                    .map_err(|e| JsError::new(&format!("to_js_value: {}", e)))
+                    .map_err(|e| CardanoError::new(&format!("to_js_value: {}", e)))
             }
 
-            pub fn from_json(json: &str) -> Result<$name, JsError> {
+            pub fn from_json(json: &str) -> Result<$name, CardanoError> {
                 serde_json::from_str(json)
-                    .map_err(|e| JsError::new(&format!("from_json: {}", e)))
+                    .map_err(|e| CardanoError::new(&format!("from_json: {}", e)))
             }
         }
     };
@@ -178,10 +178,10 @@ impl std::fmt::Display for BigNum {
 #[wasm_bindgen]
 impl BigNum {
     // Create a BigNum from a standard rust string representation
-    pub fn from_str(string: &str) -> Result<BigNum, JsError> {
+    pub fn from_str(string: &str) -> Result<BigNum, CardanoError> {
         string
             .parse::<u64>()
-            .map_err(|e| JsError::new(&format! {"{:?}", e}))
+            .map_err(|e| CardanoError::new(&format! {"{:?}", e}))
             .map(BigNum)
     }
 
@@ -208,24 +208,24 @@ impl BigNum {
         Self(res)
     }
 
-    pub fn checked_mul(&self, other: &BigNum) -> Result<BigNum, JsError> {
+    pub fn checked_mul(&self, other: &BigNum) -> Result<BigNum, CardanoError> {
         match self.0.checked_mul(other.0) {
             Some(value) => Ok(BigNum(value)),
-            None => Err(JsError::new("overflow")),
+            None => Err(CardanoError::new("overflow")),
         }
     }
 
-    pub fn checked_add(&self, other: &BigNum) -> Result<BigNum, JsError> {
+    pub fn checked_add(&self, other: &BigNum) -> Result<BigNum, CardanoError> {
         match self.0.checked_add(other.0) {
             Some(value) => Ok(BigNum(value)),
-            None => Err(JsError::new("overflow")),
+            None => Err(CardanoError::new("overflow")),
         }
     }
 
-    pub fn checked_sub(&self, other: &BigNum) -> Result<BigNum, JsError> {
+    pub fn checked_sub(&self, other: &BigNum) -> Result<BigNum, CardanoError> {
         match self.0.checked_sub(other.0) {
             Some(value) => Ok(BigNum(value)),
-            None => Err(JsError::new("underflow")),
+            None => Err(CardanoError::new("underflow")),
         }
     }
 
@@ -251,11 +251,11 @@ impl BigNum {
 }
 
 impl TryFrom<BigNum> for u32 {
-    type Error = JsError;
+    type Error = CardanoError;
 
     fn try_from(value: BigNum) -> Result<Self, Self::Error> {
         if value.0 > u32::MAX.into() {
-            Err(JsError::new(&format!(
+            Err(CardanoError::new(&format!(
                 "Value {} is bigger than max u32 {}",
                 value.0,
                 u32::MAX
@@ -424,7 +424,7 @@ impl Value {
         self.multiasset = Some(multiasset.clone());
     }
 
-    pub fn checked_add(&self, rhs: &Value) -> Result<Value, JsError> {
+    pub fn checked_add(&self, rhs: &Value) -> Result<Value, CardanoError> {
         use std::collections::btree_map::Entry;
         let coin = self.coin.checked_add(&rhs.coin)?;
 
@@ -467,7 +467,7 @@ impl Value {
         Ok(Value { coin, multiasset })
     }
 
-    pub fn checked_sub(&self, rhs_value: &Value) -> Result<Value, JsError> {
+    pub fn checked_sub(&self, rhs_value: &Value) -> Result<Value, CardanoError> {
         let coin = self.coin.checked_sub(&rhs_value.coin)?;
         let multiasset = match (&self.multiasset, &rhs_value.multiasset) {
             (Some(lhs_ma), Some(rhs_ma)) => match lhs_ma.sub(rhs_ma).len() {
@@ -675,10 +675,10 @@ impl Int {
     }
 
     /// Returns the underlying value converted to i32 if possible (within limits)
-    /// JsError in case of out of boundary overflow
-    pub fn as_i32_or_fail(&self) -> Result<i32, JsError> {
+    /// CardanoError in case of out of boundary overflow
+    pub fn as_i32_or_fail(&self) -> Result<i32, CardanoError> {
         use std::convert::TryFrom;
-        i32::try_from(self.0).map_err(|e| JsError::new(&format!("{}", e)))
+        i32::try_from(self.0).map_err(|e| CardanoError::new(&format!("{}", e)))
     }
 
     /// Returns string representation of the underlying i128 value directly.
@@ -688,12 +688,12 @@ impl Int {
     }
 
     // Create an Int from a standard rust string representation
-    pub fn from_str(string: &str) -> Result<Int, JsError> {
+    pub fn from_str(string: &str) -> Result<Int, CardanoError> {
         let x = string
             .parse::<i128>()
-            .map_err(|e| JsError::new(&format! {"{:?}", e}))?;
+            .map_err(|e| CardanoError::new(&format! {"{:?}", e}))?;
         if x.abs() > u64::MAX as i128 {
-            return Err(JsError::new(&format!(
+            return Err(CardanoError::new(&format!(
                 "{} out of bounds. Value (without sign) must fit within 4 bytes limit of {}",
                 x,
                 u64::MAX
@@ -949,10 +949,10 @@ impl BigInt {
         }
     }
 
-    pub fn from_str(text: &str) -> Result<BigInt, JsError> {
+    pub fn from_str(text: &str) -> Result<BigInt, CardanoError> {
         use std::str::FromStr;
         num_bigint::BigInt::from_str(text)
-            .map_err(|e| JsError::new(&format! {"{:?}", e}))
+            .map_err(|e| CardanoError::new(&format! {"{:?}", e}))
             .map(Self)
     }
 
@@ -1268,7 +1268,7 @@ pub fn internal_get_implicit_input(
     certs: &Option<Certificates>,
     pool_deposit: &BigNum, // // protocol parameter
     key_deposit: &BigNum,  // protocol parameter
-) -> Result<Value, JsError> {
+) -> Result<Value, CardanoError> {
     let withdrawal_sum = match &withdrawals {
         None => to_bignum(0),
         Some(x) => {
@@ -1298,7 +1298,7 @@ pub fn internal_get_deposit(
     certs: &Option<Certificates>,
     pool_deposit: &BigNum, // // protocol parameter
     key_deposit: &BigNum,  // protocol parameter
-) -> Result<Coin, JsError> {
+) -> Result<Coin, CardanoError> {
     let certificate_refund = match &certs {
         None => to_bignum(0),
         Some(certs) => certs
@@ -1318,7 +1318,7 @@ pub fn get_implicit_input(
     txbody: &TransactionBody,
     pool_deposit: &BigNum, // // protocol parameter
     key_deposit: &BigNum,  // protocol parameter
-) -> Result<Value, JsError> {
+) -> Result<Value, CardanoError> {
     internal_get_implicit_input(
         &txbody.withdrawals,
         &txbody.certs,
@@ -1332,7 +1332,7 @@ pub fn get_deposit(
     txbody: &TransactionBody,
     pool_deposit: &BigNum, // // protocol parameter
     key_deposit: &BigNum,  // protocol parameter
-) -> Result<Coin, JsError> {
+) -> Result<Coin, CardanoError> {
     internal_get_deposit(&txbody.certs, &pool_deposit, &key_deposit)
 }
 
@@ -1350,7 +1350,7 @@ impl MinOutputAdaCalculator {
         }
     }
 
-    pub fn new_empty(data_cost: &DataCost) -> Result<MinOutputAdaCalculator, JsError> {
+    pub fn new_empty(data_cost: &DataCost) -> Result<MinOutputAdaCalculator, CardanoError> {
         Ok(Self {
             output: MinOutputAdaCalculator::create_fake_output()?,
             data_cost: data_cost.clone(),
@@ -1377,13 +1377,13 @@ impl MinOutputAdaCalculator {
         self.output.script_ref = Some(script_ref.clone());
     }
 
-    pub fn calculate_ada(&self) -> Result<BigNum, JsError> {
+    pub fn calculate_ada(&self) -> Result<BigNum, CardanoError> {
         let coins_per_byte = self.data_cost.coins_per_byte();
         let mut output: TransactionOutput = self.output.clone();
         fn calc_required_coin(
             output: &TransactionOutput,
             coins_per_byte: &Coin,
-        ) -> Result<Coin, JsError> {
+        ) -> Result<Coin, CardanoError> {
             //according to https://hydra.iohk.io/build/15339994/download/1/babbage-changes.pdf
             //See on the page 9 getValue txout
             BigNum::from(output.to_bytes().len())
@@ -1402,7 +1402,7 @@ impl MinOutputAdaCalculator {
         Ok(calc_required_coin(&output, &coins_per_byte)?)
     }
 
-    fn create_fake_output() -> Result<TransactionOutput, JsError> {
+    fn create_fake_output() -> Result<TransactionOutput, CardanoError> {
         let fake_base_address: Address = Address::from_bech32("addr_test1qpu5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5ewvxwdrt70qlcpeeagscasafhffqsxy36t90ldv06wqrk2qum8x5w")?;
         let fake_value: Value = Value::new(&to_bignum(1000000));
         Ok(TransactionOutput::new(&fake_base_address, &fake_value))
@@ -1414,7 +1414,7 @@ impl MinOutputAdaCalculator {
 pub fn min_ada_for_output(
     output: &TransactionOutput,
     data_cost: &DataCost,
-) -> Result<BigNum, JsError> {
+) -> Result<BigNum, CardanoError> {
     MinOutputAdaCalculator::new(output, data_cost).calculate_ada()
 }
 
@@ -1427,7 +1427,7 @@ pub fn min_ada_required(
     assets: &Value,
     has_data_hash: bool,          // whether the output includes a data hash
     coins_per_utxo_word: &BigNum, // protocol parameter (in lovelace)
-) -> Result<BigNum, JsError> {
+) -> Result<BigNum, CardanoError> {
     let data_cost = DataCost::new_coins_per_word(coins_per_utxo_word);
     let mut calc = MinOutputAdaCalculator::new_empty(&data_cost)?;
     calc.set_amount(assets);
@@ -1457,9 +1457,9 @@ pub fn encode_json_str_to_native_script(
     json: &str,
     self_xpub: &str,
     schema: ScriptSchema,
-) -> Result<NativeScript, JsError> {
+) -> Result<NativeScript, CardanoError> {
     let value: serde_json::Value =
-        serde_json::from_str(&json).map_err(|e| JsError::new(&e.to_string()))?;
+        serde_json::from_str(&json).map_err(|e| CardanoError::new(&e.to_string()))?;
 
     let native_script = match schema {
         ScriptSchema::Wallet => encode_wallet_value_to_native_script(value, self_xpub)?,
@@ -1472,7 +1472,7 @@ pub fn encode_json_str_to_native_script(
 fn encode_wallet_value_to_native_script(
     value: serde_json::Value,
     self_xpub: &str,
-) -> Result<NativeScript, JsError> {
+) -> Result<NativeScript, CardanoError> {
     match value {
         serde_json::Value::Object(map)
             if map.contains_key("cosigners") && map.contains_key("template") =>
@@ -1488,11 +1488,11 @@ fn encode_wallet_value_to_native_script(
                             cosigners.insert(key.to_owned(), xpub.to_owned());
                         }
                     } else {
-                        return Err(JsError::new("cosigner value must be a string"));
+                        return Err(CardanoError::new("cosigner value must be a string"));
                     }
                 }
             } else {
-                return Err(JsError::new("cosigners must be a map"));
+                return Err(CardanoError::new("cosigners must be a map"));
             }
 
             let template = map.get("template").unwrap();
@@ -1501,7 +1501,7 @@ fn encode_wallet_value_to_native_script(
 
             Ok(template_native_script)
         }
-        _ => Err(JsError::new(
+        _ => Err(CardanoError::new(
             "top level must be an object. cosigners and template keys are required",
         )),
     }
@@ -1510,11 +1510,11 @@ fn encode_wallet_value_to_native_script(
 fn encode_template_to_native_script(
     template: &serde_json::Value,
     cosigners: &HashMap<String, String>,
-) -> Result<NativeScript, JsError> {
+) -> Result<NativeScript, CardanoError> {
     match template {
         serde_json::Value::String(cosigner) => {
             if let Some(xpub) = cosigners.get(cosigner) {
-                let bytes = Vec::from_hex(xpub).map_err(|e| JsError::new(&e.to_string()))?;
+                let bytes = Vec::from_hex(xpub).map_err(|e| CardanoError::new(&e.to_string()))?;
 
                 let public_key = Bip32PublicKey::from_bytes(&bytes)?;
 
@@ -1522,7 +1522,7 @@ fn encode_template_to_native_script(
                     &public_key.to_raw_key().hash(),
                 )))
             } else {
-                Err(JsError::new(&format!(
+                Err(CardanoError::new(&format!(
                     "cosigner {} not found",
                     cosigner
                 )))
@@ -1536,7 +1536,7 @@ fn encode_template_to_native_script(
                     all.add(&encode_template_to_native_script(val, cosigners)?);
                 }
             } else {
-                return Err(JsError::new("all must be an array"));
+                return Err(CardanoError::new("all must be an array"));
             }
 
             Ok(NativeScript::new_script_all(&ScriptAll::new(&all)))
@@ -1549,7 +1549,7 @@ fn encode_template_to_native_script(
                     any.add(&encode_template_to_native_script(val, cosigners)?);
                 }
             } else {
-                return Err(JsError::new("any must be an array"));
+                return Err(CardanoError::new("any must be an array"));
             }
 
             Ok(NativeScript::new_script_any(&ScriptAny::new(&any)))
@@ -1563,10 +1563,10 @@ fn encode_template_to_native_script(
                         if let Some(n) = at_least.as_u64() {
                             n as u32
                         } else {
-                            return Err(JsError::new("at_least must be an integer"));
+                            return Err(CardanoError::new("at_least must be an integer"));
                         }
                     } else {
-                        return Err(JsError::new("at_least must be an integer"));
+                        return Err(CardanoError::new("at_least must be an integer"));
                     };
 
                     let mut from_scripts = NativeScripts::new();
@@ -1576,7 +1576,7 @@ fn encode_template_to_native_script(
                             from_scripts.add(&encode_template_to_native_script(val, cosigners)?);
                         }
                     } else {
-                        return Err(JsError::new("from must be an array"));
+                        return Err(CardanoError::new("from must be an array"));
                     }
 
                     Ok(NativeScript::new_script_n_of_k(&ScriptNOfK::new(
@@ -1584,10 +1584,10 @@ fn encode_template_to_native_script(
                         &from_scripts,
                     )))
                 } else {
-                    Err(JsError::new("some must contain at_least and from"))
+                    Err(CardanoError::new("some must contain at_least and from"))
                 }
             } else {
-                Err(JsError::new("some must be an object"))
+                Err(CardanoError::new("some must be an object"))
             }
         }
         serde_json::Value::Object(map) if map.contains_key("active_from") => {
@@ -1599,12 +1599,12 @@ fn encode_template_to_native_script(
 
                     Ok(NativeScript::new_timelock_start(&time_lock_start))
                 } else {
-                    Err(JsError::new(
+                    Err(CardanoError::new(
                         "active_from slot must be an integer greater than or equal to 0",
                     ))
                 }
             } else {
-                Err(JsError::new("active_from slot must be a number"))
+                Err(CardanoError::new("active_from slot must be a number"))
             }
         }
         serde_json::Value::Object(map) if map.contains_key("active_until") => {
@@ -1616,15 +1616,15 @@ fn encode_template_to_native_script(
 
                     Ok(NativeScript::new_timelock_expiry(&time_lock_expiry))
                 } else {
-                    Err(JsError::new(
+                    Err(CardanoError::new(
                         "active_until slot must be an integer greater than or equal to 0",
                     ))
                 }
             } else {
-                Err(JsError::new("active_until slot must be a number"))
+                Err(CardanoError::new("active_until slot must be a number"))
             }
         }
-        _ => Err(JsError::new("invalid template format")),
+        _ => Err(CardanoError::new("invalid template format")),
     }
 }
 

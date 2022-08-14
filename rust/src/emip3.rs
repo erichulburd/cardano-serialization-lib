@@ -1,4 +1,4 @@
-use super::error::JsError;
+use super::error::CardanoError;
 use super::*;
 
 use cryptoxide::chacha20poly1305::ChaCha20Poly1305;
@@ -29,36 +29,35 @@ mod password_encryption_parameter {
     pub const ENCRYPTED_START: usize = TAG_END;
 }
 
-#[wasm_bindgen]
 pub fn encrypt_with_password(
     password: &str,
     salt: &str,
     nonce: &str,
     data: &str,
-) -> Result<String, JsError> {
+) -> Result<String, CardanoError> {
     use password_encryption_parameter::*;
 
-    let password = hex::decode(password).map_err(|e| JsError::new(&e.to_string()))?;
-    let salt = hex::decode(salt).map_err(|e| JsError::new(&e.to_string()))?;
-    let nonce = hex::decode(nonce).map_err(|e| JsError::new(&e.to_string()))?;
-    let data = hex::decode(data).map_err(|e| JsError::new(&e.to_string()))?;
+    let password = hex::decode(password).map_err(|e| CardanoError::new(&e.to_string()))?;
+    let salt = hex::decode(salt).map_err(|e| CardanoError::new(&e.to_string()))?;
+    let nonce = hex::decode(nonce).map_err(|e| CardanoError::new(&e.to_string()))?;
+    let data = hex::decode(data).map_err(|e| CardanoError::new(&e.to_string()))?;
 
     if salt.len() != SALT_SIZE {
-        return Err(JsError::new(&format!(
+        return Err(CardanoError::new(&format!(
             "salt len must be {}, found {} bytes",
             SALT_SIZE,
             salt.len()
         )));
     }
     if nonce.len() != NONCE_SIZE {
-        return Err(JsError::new(&format!(
+        return Err(CardanoError::new(&format!(
             "nonce len must be {}, found {} bytes",
             NONCE_SIZE,
             nonce.len()
         )));
     }
     if password.len() == 0 {
-        return Err(JsError::new("Password len cannot be 0"));
+        return Err(CardanoError::new("Password len cannot be 0"));
     }
 
     let key = {
@@ -83,15 +82,14 @@ pub fn encrypt_with_password(
     Ok(output.encode_hex::<String>())
 }
 
-#[wasm_bindgen]
-pub fn decrypt_with_password(password: &str, data: &str) -> Result<String, JsError> {
+pub fn decrypt_with_password(password: &str, data: &str) -> Result<String, CardanoError> {
     use password_encryption_parameter::*;
-    let password = hex::decode(password).map_err(|e| JsError::new(&e.to_string()))?;
-    let data = hex::decode(data).map_err(|e| JsError::new(&e.to_string()))?;
+    let password = hex::decode(password).map_err(|e| CardanoError::new(&e.to_string()))?;
+    let data = hex::decode(data).map_err(|e| CardanoError::new(&e.to_string()))?;
 
     if data.len() <= METADATA_SIZE {
         // not enough input to decrypt.
-        return Err(JsError::new("Missing input data"));
+        return Err(CardanoError::new("Missing input data"));
     }
 
     let salt = &data[SALT_START..SALT_END];
@@ -113,7 +111,7 @@ pub fn decrypt_with_password(password: &str, data: &str) -> Result<String, JsErr
     if decryption_succeed {
         Ok(decrypted.encode_hex::<String>())
     } else {
-        Err(JsError::new("Decryption error"))
+        Err(CardanoError::new("Decryption error"))
     }
 }
 

@@ -48,9 +48,9 @@ impl TransactionOutputBuilder {
         cfg
     }
 
-    pub fn next(&self) -> Result<TransactionOutputAmountBuilder, JsError> {
+    pub fn next(&self) -> Result<TransactionOutputAmountBuilder, CardanoError> {
         Ok(TransactionOutputAmountBuilder {
-            address: self.address.clone().ok_or(JsError::new(
+            address: self.address.clone().ok_or(CardanoError::new(
                 "TransactionOutputBaseBuilder: Address missing",
             ))?,
             amount: None,
@@ -103,7 +103,7 @@ impl TransactionOutputAmountBuilder {
         &self,
         multiasset: &MultiAsset,
         coins_per_utxo_word: &Coin,
-    ) -> Result<TransactionOutputAmountBuilder, JsError> {
+    ) -> Result<TransactionOutputAmountBuilder, CardanoError> {
         let data_cost = DataCost::new_coins_per_word(coins_per_utxo_word);
         self.with_asset_and_min_required_coin_by_utxo_cost(multiasset, &data_cost)
     }
@@ -112,7 +112,7 @@ impl TransactionOutputAmountBuilder {
         &self,
         multiasset: &MultiAsset,
         data_cost: &DataCost,
-    ) -> Result<TransactionOutputAmountBuilder, JsError> {
+    ) -> Result<TransactionOutputAmountBuilder, CardanoError> {
         // TODO: double ada calculation needs to check if it redundant
         let mut calc = MinOutputAdaCalculator::new_empty(data_cost)?;
         if let Some(data) = &self.data {
@@ -144,10 +144,10 @@ impl TransactionOutputAmountBuilder {
         Ok(self.with_coin_and_asset(&required_coin, &multiasset))
     }
 
-    pub fn build(&self) -> Result<TransactionOutput, JsError> {
+    pub fn build(&self) -> Result<TransactionOutput, CardanoError> {
         Ok(TransactionOutput {
             address: self.address.clone(),
-            amount: self.amount.clone().ok_or(JsError::new(
+            amount: self.amount.clone().ok_or(CardanoError::new(
                 "TransactionOutputAmountBuilder: amount missing",
             ))?,
             plutus_data: self.data.clone(),

@@ -88,7 +88,7 @@ fn count_needed_vkeys(tx_builder: &TransactionBuilder) -> usize {
 fn fake_full_tx(
     tx_builder: &TransactionBuilder,
     body: TransactionBody,
-) -> Result<Transaction, JsError> {
+) -> Result<Transaction, CardanoError> {
     let fake_key_root = fake_private_key();
     let raw_key_public = fake_raw_key_public();
     let fake_sig = fake_raw_key_sig();
@@ -148,9 +148,9 @@ fn fake_full_tx(
 fn assert_required_mint_scripts(
     mint: &Mint,
     maybe_mint_scripts: Option<&NativeScripts>,
-) -> Result<(), JsError> {
+) -> Result<(), CardanoError> {
     if maybe_mint_scripts.is_none_or_empty() {
-        return Err(JsError::new(
+        return Err(CardanoError::new(
             "Mint is present in the builder, but witness scripts are not provided!",
         ));
     }
@@ -159,7 +159,7 @@ fn assert_required_mint_scripts(
         mint_scripts.0.iter().map(|script| script.hash()).collect();
     for mint_hash in mint.keys().0.iter() {
         if !witness_hashes.contains(mint_hash) {
-            return Err(JsError::new(&format!(
+            return Err(CardanoError::new(&format!(
                 "No witness script is found for mint policy '{:?}'! Script is required!",
                 hex::encode(mint_hash.to_bytes()),
             )));
@@ -168,7 +168,7 @@ fn assert_required_mint_scripts(
     Ok(())
 }
 
-fn min_fee(tx_builder: &TransactionBuilder) -> Result<Coin, JsError> {
+fn min_fee(tx_builder: &TransactionBuilder) -> Result<Coin, CardanoError> {
     // Commented out for performance, `min_fee` is a critical function
     // This was mostly added here as a paranoid step anyways
     // If someone is using `set_mint` and `add_mint*` API function, everything is expected to be intact
@@ -183,7 +183,7 @@ fn min_fee(tx_builder: &TransactionBuilder) -> Result<Coin, JsError> {
         return fee.checked_add(&script_fee);
     }
     if tx_builder.has_plutus_inputs() {
-        return Err(JsError::new(
+        return Err(CardanoError::new(
             "Plutus inputs are present but ex unit prices are missing in the config!",
         ));
     }
@@ -309,25 +309,25 @@ impl TransactionBuilderConfigBuilder {
         cfg
     }
 
-    pub fn build(&self) -> Result<TransactionBuilderConfig, JsError> {
+    pub fn build(&self) -> Result<TransactionBuilderConfig, CardanoError> {
         let cfg: Self = self.clone();
         Ok(TransactionBuilderConfig {
             fee_algo: cfg
                 .fee_algo
-                .ok_or(JsError::new("uninitialized field: fee_algo"))?,
+                .ok_or(CardanoError::new("uninitialized field: fee_algo"))?,
             pool_deposit: cfg
                 .pool_deposit
-                .ok_or(JsError::new("uninitialized field: pool_deposit"))?,
+                .ok_or(CardanoError::new("uninitialized field: pool_deposit"))?,
             key_deposit: cfg
                 .key_deposit
-                .ok_or(JsError::new("uninitialized field: key_deposit"))?,
+                .ok_or(CardanoError::new("uninitialized field: key_deposit"))?,
             max_value_size: cfg
                 .max_value_size
-                .ok_or(JsError::new("uninitialized field: max_value_size"))?,
+                .ok_or(CardanoError::new("uninitialized field: max_value_size"))?,
             max_tx_size: cfg
                 .max_tx_size
-                .ok_or(JsError::new("uninitialized field: max_tx_size"))?,
-            coins_per_utxo_byte: cfg.coins_per_utxo_byte.ok_or(JsError::new(
+                .ok_or(CardanoError::new("uninitialized field: max_tx_size"))?,
+            coins_per_utxo_byte: cfg.coins_per_utxo_byte.ok_or(CardanoError::new(
                 "uninitialized field: coins_per_utxo_byte",
             ))?,
             ex_unit_prices: cfg.ex_unit_prices,
@@ -371,7 +371,7 @@ impl TransactionBuilder {
         &mut self,
         inputs: &TransactionUnspentOutputs,
         strategy: CoinSelectionStrategyCIP2,
-    ) -> Result<(), JsError> {
+    ) -> Result<(), CardanoError> {
         let available_inputs = &inputs.0.clone();
         let mut input_total = self.get_total_input()?;
         let mut output_total = self
@@ -385,7 +385,7 @@ impl TransactionBuilder {
                     .iter()
                     .any(|output| output.amount.multiasset.is_some())
                 {
-                    return Err(JsError::new("Multiasset values not supported by LargestFirst. Please use LargestFirstMultiAsset"));
+                    return Err(CardanoError::new("Multiasset values not supported by LargestFirst. Please use LargestFirstMultiAsset"));
                 }
                 self.cip2_largest_first_by(
                     available_inputs,
@@ -402,7 +402,7 @@ impl TransactionBuilder {
                     .iter()
                     .any(|output| output.amount.multiasset.is_some())
                 {
-                    return Err(JsError::new("Multiasset values not supported by RandomImprove. Please use RandomImproveMultiAsset"));
+                    return Err(CardanoError::new("Multiasset values not supported by RandomImprove. Please use RandomImproveMultiAsset"));
                 }
                 use rand::Rng;
                 let mut rng = rand::thread_rng();
@@ -421,7 +421,7 @@ impl TransactionBuilder {
                 // a specific output, so the improvement algorithm we do above does not apply here.
                 while input_total.coin < output_total.coin {
                     if available_indices.is_empty() {
-                        return Err(JsError::new("UTxO Balance Insufficient[x]"));
+                        return Err(CardanoError::new("UTxO Balance Insufficient[x]"));
                     }
                     let i = *available_indices
                         .iter()
@@ -499,7 +499,7 @@ impl TransactionBuilder {
                 // a specific output, so the improvement algorithm we do above does not apply here.
                 while input_total.coin < output_total.coin {
                     if available_indices.is_empty() {
-                        return Err(JsError::new("UTxO Balance Insufficient[x]"));
+                        return Err(CardanoError::new("UTxO Balance Insufficient[x]"));
                     }
                     let i = *available_indices
                         .iter()
@@ -529,7 +529,7 @@ impl TransactionBuilder {
         input_total: &mut Value,
         output_total: &mut Value,
         by: F,
-    ) -> Result<(), JsError>
+    ) -> Result<(), CardanoError>
     where
         F: Fn(&Value) -> Option<BigNum>,
     {
@@ -559,7 +559,7 @@ impl TransactionBuilder {
         if by(input_total).unwrap_or(BigNum::zero())
             < by(output_total).expect("do not call on asset types that aren't in the output")
         {
-            return Err(JsError::new("UTxO Balance Insufficient"));
+            return Err(CardanoError::new("UTxO Balance Insufficient"));
         }
 
         Ok(())
@@ -573,7 +573,7 @@ impl TransactionBuilder {
         output_total: &mut Value,
         by: F,
         rng: &mut rand::rngs::ThreadRng,
-    ) -> Result<(), JsError>
+    ) -> Result<(), CardanoError>
     where
         F: Fn(&Value) -> Option<BigNum>,
     {
@@ -613,7 +613,7 @@ impl TransactionBuilder {
             let needed = by(&output.amount).unwrap();
             while added < needed {
                 if relevant_indices.is_empty() {
-                    return Err(JsError::new("UTxO Balance Insufficient"));
+                    return Err(CardanoError::new("UTxO Balance Insufficient"));
                 }
                 let random_index = rng.gen_range(0..relevant_indices.len());
                 let i = relevant_indices.swap_remove(random_index);
@@ -688,24 +688,24 @@ impl TransactionBuilder {
     pub fn set_collateral_return_and_total(
         &mut self,
         collateral_return: &TransactionOutput,
-    ) -> Result<(), JsError> {
+    ) -> Result<(), CardanoError> {
         let collateral = &self.collateral;
         if collateral.len() == 0 {
-            return Err(JsError::new(
+            return Err(CardanoError::new(
                 "Cannot calculate total collateral value when collateral inputs are missing",
             ));
         }
         let col_input_value: Value = collateral.total_value()?;
         let total_col: Value = col_input_value.checked_sub(&collateral_return.amount())?;
         if total_col.multiasset.is_some() {
-            return Err(JsError::new(
+            return Err(CardanoError::new(
                 "Total collateral value cannot contain assets!",
             ));
         }
 
         let min_ada = min_ada_for_output(&collateral_return, &self.config.utxo_cost())?;
         if min_ada > collateral_return.amount.coin {
-            return Err(JsError::new(&format!(
+            return Err(CardanoError::new(&format!(
                 "Not enough coin to make return on the collateral value!\
                  Increase amount of return coins. \
                  Min ada for return {}, but was {}",
@@ -729,10 +729,10 @@ impl TransactionBuilder {
         &mut self,
         total_collateral: &Coin,
         return_address: &Address,
-    ) -> Result<(), JsError> {
+    ) -> Result<(), CardanoError> {
         let collateral = &self.collateral;
         if collateral.len() == 0 {
-            return Err(JsError::new(
+            return Err(CardanoError::new(
                 "Cannot calculate collateral return when collateral inputs are missing",
             ));
         }
@@ -742,7 +742,7 @@ impl TransactionBuilder {
             let return_output = TransactionOutput::new(return_address, &col_return);
             let min_ada = min_ada_for_output(&return_output, &self.config.utxo_cost())?;
             if min_ada > col_return.coin {
-                return Err(JsError::new(&format!(
+                return Err(CardanoError::new(&format!(
                     "Not enough coin to make return on the collateral value!\
                  Decrease the total collateral value or add more collateral inputs. \
                  Min ada for return {}, but was {}",
@@ -874,7 +874,7 @@ impl TransactionBuilder {
         address: &Address,
         input: &TransactionInput,
         amount: &Value,
-    ) -> Result<Coin, JsError> {
+    ) -> Result<Coin, CardanoError> {
         let mut self_copy = self.clone();
 
         // we need some value for these for it to be a a valid transaction
@@ -890,17 +890,17 @@ impl TransactionBuilder {
     }
 
     /// Add explicit output via a TransactionOutput object
-    pub fn add_output(&mut self, output: &TransactionOutput) -> Result<(), JsError> {
+    pub fn add_output(&mut self, output: &TransactionOutput) -> Result<(), CardanoError> {
         let value_size = output.amount.to_bytes().len();
         if value_size > self.config.max_value_size as usize {
-            return Err(JsError::new(&format!(
+            return Err(CardanoError::new(&format!(
                 "Maximum value size of {} exceeded. Found: {}",
                 self.config.max_value_size, value_size
             )));
         }
         let min_ada = min_ada_for_output(&output, &self.config.utxo_cost())?;
         if output.amount().coin() < min_ada {
-            Err(JsError::new(&format!(
+            Err(CardanoError::new(&format!(
                 "Value {} less than the minimum UTXO value {}",
                 from_bignum(&output.amount().coin()),
                 from_bignum(&min_ada)
@@ -912,7 +912,7 @@ impl TransactionBuilder {
     }
 
     /// calculates how much the fee would increase if you added a given output
-    pub fn fee_for_output(&self, output: &TransactionOutput) -> Result<Coin, JsError> {
+    pub fn fee_for_output(&self, output: &TransactionOutput) -> Result<Coin, CardanoError> {
         let mut self_copy = self.clone();
 
         // we need some value for these for it to be a a valid transaction
@@ -1016,7 +1016,7 @@ impl TransactionBuilder {
         &mut self,
         key: &TransactionMetadatumLabel,
         val: String,
-    ) -> Result<(), JsError> {
+    ) -> Result<(), CardanoError> {
         self.add_json_metadatum_with_schema(key, val, MetadataJsonSchema::NoConversions)
     }
 
@@ -1027,7 +1027,7 @@ impl TransactionBuilder {
         key: &TransactionMetadatumLabel,
         val: String,
         schema: MetadataJsonSchema,
-    ) -> Result<(), JsError> {
+    ) -> Result<(), CardanoError> {
         let metadatum = encode_json_str_to_metadatum(val, schema)?;
         self.add_metadatum(key, &metadatum);
         Ok(())
@@ -1036,7 +1036,7 @@ impl TransactionBuilder {
     /// Set explicit Mint object and the required witnesses to this builder
     /// it will replace any previously existing mint and mint scripts
     /// NOTE! Error will be returned in case a mint policy does not have a matching script
-    pub fn set_mint(&mut self, mint: &Mint, mint_scripts: &NativeScripts) -> Result<(), JsError> {
+    pub fn set_mint(&mut self, mint: &Mint, mint_scripts: &NativeScripts) -> Result<(), CardanoError> {
         assert_required_mint_scripts(mint, Some(mint_scripts))?;
         self.mint = Some(mint.clone());
         self.mint_scripts = Some(mint_scripts.clone());
@@ -1126,9 +1126,9 @@ impl TransactionBuilder {
         amount: Int,
         output_builder: &TransactionOutputAmountBuilder,
         output_coin: &Coin,
-    ) -> Result<(), JsError> {
+    ) -> Result<(), CardanoError> {
         if !amount.is_positive() {
-            return Err(JsError::new("Output value must be positive!"));
+            return Err(CardanoError::new("Output value must be positive!"));
         }
         let policy_id: PolicyID = policy_script.hash();
         self._add_mint_asset(&policy_id, policy_script, asset_name, amount.clone());
@@ -1156,9 +1156,9 @@ impl TransactionBuilder {
         asset_name: &AssetName,
         amount: Int,
         output_builder: &TransactionOutputAmountBuilder,
-    ) -> Result<(), JsError> {
+    ) -> Result<(), CardanoError> {
         if !amount.is_positive() {
-            return Err(JsError::new("Output value must be positive!"));
+            return Err(CardanoError::new("Output value must be positive!"));
         }
         let policy_id: PolicyID = policy_script.hash();
         self._add_mint_asset(&policy_id, policy_script, asset_name, amount.clone());
@@ -1205,7 +1205,7 @@ impl TransactionBuilder {
     }
 
     /// does not include refunds or withdrawals
-    pub fn get_explicit_input(&self) -> Result<Value, JsError> {
+    pub fn get_explicit_input(&self) -> Result<Value, CardanoError> {
         self.inputs
             .iter()
             .try_fold(Value::zero(), |acc, ref tx_builder_input| {
@@ -1214,7 +1214,7 @@ impl TransactionBuilder {
     }
 
     /// withdrawals and refunds
-    pub fn get_implicit_input(&self) -> Result<Value, JsError> {
+    pub fn get_implicit_input(&self) -> Result<Value, CardanoError> {
         internal_get_implicit_input(
             &self.withdrawals,
             &self.certs,
@@ -1237,7 +1237,7 @@ impl TransactionBuilder {
     }
 
     /// Return explicit input plus implicit input plus mint
-    pub fn get_total_input(&self) -> Result<Value, JsError> {
+    pub fn get_total_input(&self) -> Result<Value, CardanoError> {
         let (mint_value, _) = self.get_mint_as_values();
         self.get_explicit_input()?
             .checked_add(&self.get_implicit_input()?)?
@@ -1245,7 +1245,7 @@ impl TransactionBuilder {
     }
 
     /// Return explicit output plus deposit plus burn
-    pub fn get_total_output(&self) -> Result<Value, JsError> {
+    pub fn get_total_output(&self) -> Result<Value, CardanoError> {
         let (_, burn_value) = self.get_mint_as_values();
         self.get_explicit_output()?
             .checked_add(&Value::new(&self.get_deposit()?))?
@@ -1253,7 +1253,7 @@ impl TransactionBuilder {
     }
 
     /// does not include fee
-    pub fn get_explicit_output(&self) -> Result<Value, JsError> {
+    pub fn get_explicit_output(&self) -> Result<Value, CardanoError> {
         self.outputs
             .0
             .iter()
@@ -1262,7 +1262,7 @@ impl TransactionBuilder {
             })
     }
 
-    pub fn get_deposit(&self) -> Result<Coin, JsError> {
+    pub fn get_deposit(&self) -> Result<Coin, CardanoError> {
         internal_get_deposit(
             &self.certs,
             &self.config.pool_deposit,
@@ -1278,12 +1278,12 @@ impl TransactionBuilder {
     /// Make sure to call this function last after setting all other tx-body properties
     /// Editing inputs, outputs, mint, etc. after change been calculated
     /// might cause a mismatch in calculated fee versus the required fee
-    pub fn add_change_if_needed(&mut self, address: &Address) -> Result<bool, JsError> {
+    pub fn add_change_if_needed(&mut self, address: &Address) -> Result<bool, CardanoError> {
         let fee = match &self.fee {
             None => self.min_fee(),
             // generating the change output involves changing the fee
             Some(_x) => {
-                return Err(JsError::new(
+                return Err(CardanoError::new(
                     "Cannot calculate change if fee was explicitly specified",
                 ))
             }
@@ -1304,7 +1304,7 @@ impl TransactionBuilder {
                 self.set_fee(&input_total.checked_sub(&output_total)?.coin());
                 Ok(false)
             }
-            Some(Ordering::Less) => Err(JsError::new("Insufficient input in transaction")),
+            Some(Ordering::Less) => Err(CardanoError::new("Insufficient input in transaction")),
             Some(Ordering::Greater) => {
                 fn has_assets(ma: Option<MultiAsset>) -> bool {
                     ma.map(|assets| assets.len() > 0).unwrap_or(false)
@@ -1317,7 +1317,7 @@ impl TransactionBuilder {
                         asset_to_add: (PolicyID, AssetName, BigNum),
                         max_value_size: u32,
                         data_cost: &DataCost,
-                    ) -> Result<bool, JsError> {
+                    ) -> Result<bool, CardanoError> {
                         let (policy, asset_name, value) = asset_to_add;
                         let mut current_assets_clone = current_assets.clone();
                         current_assets_clone.insert(&asset_name, &value);
@@ -1344,7 +1344,7 @@ impl TransactionBuilder {
                         change_estimator: &Value,
                         plutus_data: &Option<DataOption>,
                         script_ref: &Option<ScriptRef>,
-                    ) -> Result<Vec<MultiAsset>, JsError> {
+                    ) -> Result<Vec<MultiAsset>, CardanoError> {
                         // we insert the entire available ADA temporarily here since that could potentially impact the size
                         // as it could be 1, 2 3 or 4 bytes for Coin.
                         let mut change_assets: Vec<MultiAsset> = Vec::new();
@@ -1478,7 +1478,7 @@ impl TransactionBuilder {
                         )?;
                         if nft_changes.len() == 0 {
                             // this likely should never happen
-                            return Err(JsError::new("NFTs too large for change output"));
+                            return Err(CardanoError::new("NFTs too large for change output"));
                         }
                         // we only add the minimum needed (for now) to cover this output
                         let mut change_value = Value::new(&Coin::zero());
@@ -1513,7 +1513,7 @@ impl TransactionBuilder {
                             let fee_for_change = self.fee_for_output(&change_output)?;
                             new_fee = new_fee.checked_add(&fee_for_change)?;
                             if change_left.coin() < min_ada.checked_add(&new_fee)? {
-                                return Err(JsError::new("Not enough ADA leftover to include non-ADA assets in a change address"));
+                                return Err(CardanoError::new("Not enough ADA leftover to include non-ADA assets in a change address"));
                             }
                             change_left = change_left.checked_sub(&change_value)?;
                             self.add_output(&change_output)?;
@@ -1575,7 +1575,7 @@ impl TransactionBuilder {
                     fn burn_extra(
                         builder: &mut TransactionBuilder,
                         burn_amount: &BigNum,
-                    ) -> Result<bool, JsError> {
+                    ) -> Result<bool, CardanoError> {
                         // recall: min_fee assumed the fee was the maximum possible so we definitely have enough input to cover whatever fee it ends up being
                         builder.set_fee(burn_amount);
                         Ok(false) // not enough input to covert the extra fee from adding an output so we just burn whatever is left
@@ -1615,7 +1615,7 @@ impl TransactionBuilder {
                     }
                 }
             }
-            None => Err(JsError::new(
+            None => Err(CardanoError::new(
                 "missing input or output for some native asset",
             )),
         }
@@ -1630,7 +1630,7 @@ impl TransactionBuilder {
     /// NOTE: this function will check which language versions are used in the present scripts
     /// and will assert and require for a corresponding cost-model to be present in the passed map.
     /// Only the cost-models for the present language versions will be used in the hash calculation.
-    pub fn calc_script_data_hash(&mut self, cost_models: &Costmdls) -> Result<(), JsError> {
+    pub fn calc_script_data_hash(&mut self, cost_models: &Costmdls) -> Result<(), CardanoError> {
         let mut retained_cost_models = Costmdls::new();
         if let Some(pw) = self.inputs.get_plutus_input_scripts() {
             let (scripts, datums, redeemers) = pw.collect();
@@ -1641,7 +1641,7 @@ impl TransactionBuilder {
                             retained_cost_models.insert(&lang, &cost);
                         }
                         _ => {
-                            return Err(JsError::new(&format!(
+                            return Err(CardanoError::new(&format!(
                                 "Missing cost model for language version: {:?}",
                                 lang
                             )))
@@ -1675,10 +1675,10 @@ impl TransactionBuilder {
         self.required_signers.add(key);
     }
 
-    fn build_and_size(&self) -> Result<(TransactionBody, usize), JsError> {
+    fn build_and_size(&self) -> Result<(TransactionBody, usize), CardanoError> {
         let fee = self
             .fee
-            .ok_or_else(|| JsError::new("Fee not specified"))?;
+            .ok_or_else(|| CardanoError::new("Fee not specified"))?;
         let built = TransactionBody {
             inputs: self.inputs.inputs(),
             outputs: self.outputs.clone(),
@@ -1707,7 +1707,7 @@ impl TransactionBuilder {
         return Ok((full_tx.body, full_tx_size));
     }
 
-    pub fn full_size(&self) -> Result<usize, JsError> {
+    pub fn full_size(&self) -> Result<usize, CardanoError> {
         return self.build_and_size().map(|r| r.1);
     }
 
@@ -1718,10 +1718,10 @@ impl TransactionBuilder {
     /// Returns object the body of the new transaction
     /// Auxiliary data itself is not included
     /// You can use `get_auxiliary_data` or `build_tx`
-    pub fn build(&self) -> Result<TransactionBody, JsError> {
+    pub fn build(&self) -> Result<TransactionBody, CardanoError> {
         let (body, full_tx_size) = self.build_and_size()?;
         if full_tx_size > self.config.max_tx_size as usize {
-            Err(JsError::new(&format!(
+            Err(CardanoError::new(&format!(
                 "Maximum transaction size of {} exceeded. Found: {}",
                 self.config.max_tx_size, full_tx_size
             )))
@@ -1799,20 +1799,20 @@ impl TransactionBuilder {
     /// NOTE: witness_set will contain all mint_scripts if any been added or set
     /// NOTE: is_valid set to true
     /// NOTE: Will fail in case there are any script inputs added with no corresponding witness
-    pub fn build_tx(&self) -> Result<Transaction, JsError> {
+    pub fn build_tx(&self) -> Result<Transaction, CardanoError> {
         if self.count_missing_input_scripts() > 0 {
-            return Err(JsError::new(
+            return Err(CardanoError::new(
                 "There are some script inputs added that don't have the corresponding script provided as a witness!",
             ));
         }
         if self.has_plutus_inputs() {
             if self.script_data_hash.is_none() {
-                return Err(JsError::new(
+                return Err(CardanoError::new(
                     "Plutus inputs are present, but script data hash is not specified",
                 ));
             }
             if self.collateral.len() == 0 {
-                return Err(JsError::new(
+                return Err(CardanoError::new(
                     "Plutus inputs are present, but no collateral inputs are added",
                 ));
             }
@@ -1821,7 +1821,7 @@ impl TransactionBuilder {
     }
 
     /// Similar to `.build_tx()` but will NOT fail in case there are missing script witnesses
-    pub fn build_tx_unsafe(&self) -> Result<Transaction, JsError> {
+    pub fn build_tx_unsafe(&self) -> Result<Transaction, CardanoError> {
         Ok(Transaction {
             body: self.build()?,
             witness_set: self.get_witness_set(),
@@ -1833,7 +1833,7 @@ impl TransactionBuilder {
     /// warning: sum of all parts of a transaction must equal 0. You cannot just set the fee to the min value and forget about it
     /// warning: min_fee may be slightly larger than the actual minimum fee (ex: a few lovelaces)
     /// this is done to simplify the library code, but can be fixed later
-    pub fn min_fee(&self) -> Result<Coin, JsError> {
+    pub fn min_fee(&self) -> Result<Coin, CardanoError> {
         let mut self_copy = self.clone();
         self_copy.set_fee(&to_bignum(0x1_00_00_00_00));
         min_fee(&self_copy)

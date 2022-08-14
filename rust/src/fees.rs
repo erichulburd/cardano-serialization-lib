@@ -27,7 +27,7 @@ impl LinearFee {
 }
 
 #[wasm_bindgen]
-pub fn min_fee(tx: &Transaction, linear_fee: &LinearFee) -> Result<Coin, JsError> {
+pub fn min_fee(tx: &Transaction, linear_fee: &LinearFee) -> Result<Coin, CardanoError> {
     to_bignum(tx.to_bytes().len() as u64)
         .checked_mul(&linear_fee.coefficient())?
         .checked_add(&linear_fee.constant())
@@ -37,9 +37,9 @@ pub fn min_fee(tx: &Transaction, linear_fee: &LinearFee) -> Result<Coin, JsError
 pub fn calculate_ex_units_ceil_cost(
     ex_units: &ExUnits,
     ex_unit_prices: &ExUnitPrices,
-) -> Result<Coin, JsError> {
+) -> Result<Coin, CardanoError> {
     type Ratio = (BigInt, BigInt);
-    fn mult(sc: &SubCoin, x: &BigNum) -> Result<Ratio, JsError> {
+    fn mult(sc: &SubCoin, x: &BigNum) -> Result<Ratio, CardanoError> {
         let n: BigInt = BigInt::from_str(&sc.numerator.to_str())?;
         let d: BigInt = BigInt::from_str(&sc.denominator.to_str())?;
         let m: BigInt = BigInt::from_str(&x.to_str())?;
@@ -66,7 +66,7 @@ pub fn calculate_ex_units_ceil_cost(
     let (total_num, total_denum) = sum(&mem_ratio, &steps_ratio);
     match total_num.div_ceil(&total_denum).as_u64() {
         Some(coin) => Ok(coin),
-        _ => Err(JsError::new(&format!(
+        _ => Err(CardanoError::new(&format!(
             "Failed to calculate ceil from ratio {}/{}",
             total_num.to_str(),
             total_denum.to_str(),
@@ -75,7 +75,7 @@ pub fn calculate_ex_units_ceil_cost(
 }
 
 #[wasm_bindgen]
-pub fn min_script_fee(tx: &Transaction, ex_unit_prices: &ExUnitPrices) -> Result<Coin, JsError> {
+pub fn min_script_fee(tx: &Transaction, ex_unit_prices: &ExUnitPrices) -> Result<Coin, CardanoError> {
     if let Some(redeemers) = &tx.witness_set.redeemers {
         let total_ex_units: ExUnits = redeemers.total_ex_units()?;
         return calculate_ex_units_ceil_cost(&total_ex_units, ex_unit_prices);

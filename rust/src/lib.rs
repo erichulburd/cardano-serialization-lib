@@ -354,7 +354,7 @@ impl TransactionBody {
         since = "10.1.0",
         note = "Possible boundary error. Use ttl_bignum instead"
     )]
-    pub fn ttl(&self) -> Result<Option<Slot32>, JsError> {
+    pub fn ttl(&self) -> Result<Option<Slot32>, CardanoError> {
         match self.ttl {
             Some(ttl) => match ttl.try_into() {
                 Ok(ttl32) => Ok(Some(ttl32)),
@@ -434,7 +434,7 @@ impl TransactionBody {
         since = "10.1.0",
         note = "Possible boundary error. Use validity_start_interval_bignum instead"
     )]
-    pub fn validity_start_interval(&self) -> Result<Option<Slot32>, JsError> {
+    pub fn validity_start_interval(&self) -> Result<Option<Slot32>, CardanoError> {
         match self.validity_start_interval.clone() {
             Some(interval) => match interval.try_into() {
                 Ok(internal32) => Ok(Some(internal32)),
@@ -1353,8 +1353,8 @@ to_from_json!(Ipv4);
 
 #[wasm_bindgen]
 impl Ipv4 {
-    pub fn new(data: Vec<u8>) -> Result<Ipv4, JsError> {
-        Self::new_impl(data).map_err(|e| JsError::new(&e.to_string()))
+    pub fn new(data: Vec<u8>) -> Result<Ipv4, CardanoError> {
+        Self::new_impl(data).map_err(|e| CardanoError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(data: Vec<u8>) -> Result<Ipv4, DeserializeError> {
@@ -1385,8 +1385,8 @@ to_from_json!(Ipv6);
 
 #[wasm_bindgen]
 impl Ipv6 {
-    pub fn new(data: Vec<u8>) -> Result<Ipv6, JsError> {
-        Self::new_impl(data).map_err(|e| JsError::new(&e.to_string()))
+    pub fn new(data: Vec<u8>) -> Result<Ipv6, CardanoError> {
+        Self::new_impl(data).map_err(|e| CardanoError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(data: Vec<u8>) -> Result<Ipv6, DeserializeError> {
@@ -1417,8 +1417,8 @@ to_from_bytes!(URL);
 
 #[wasm_bindgen]
 impl URL {
-    pub fn new(url: String) -> Result<URL, JsError> {
-        Self::new_impl(url).map_err(|e| JsError::new(&e.to_string()))
+    pub fn new(url: String) -> Result<URL, CardanoError> {
+        Self::new_impl(url).map_err(|e| CardanoError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(url: String) -> Result<URL, DeserializeError> {
@@ -1453,8 +1453,8 @@ to_from_bytes!(DNSRecordAorAAAA);
 
 #[wasm_bindgen]
 impl DNSRecordAorAAAA {
-    pub fn new(dns_name: String) -> Result<DNSRecordAorAAAA, JsError> {
-        Self::new_impl(dns_name).map_err(|e| JsError::new(&e.to_string()))
+    pub fn new(dns_name: String) -> Result<DNSRecordAorAAAA, CardanoError> {
+        Self::new_impl(dns_name).map_err(|e| CardanoError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(dns_name: String) -> Result<DNSRecordAorAAAA, DeserializeError> {
@@ -1487,8 +1487,8 @@ to_from_bytes!(DNSRecordSRV);
 
 #[wasm_bindgen]
 impl DNSRecordSRV {
-    pub fn new(dns_name: String) -> Result<DNSRecordSRV, JsError> {
-        Self::new_impl(dns_name).map_err(|e| JsError::new(&e.to_string()))
+    pub fn new(dns_name: String) -> Result<DNSRecordSRV, CardanoError> {
+        Self::new_impl(dns_name).map_err(|e| CardanoError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(dns_name: String) -> Result<DNSRecordSRV, DeserializeError> {
@@ -2039,7 +2039,7 @@ impl TimelockStart {
         since = "10.1.0",
         note = "Possible boundary error. Use slot_bignum instead"
     )]
-    pub fn slot(&self) -> Result<Slot32, JsError> {
+    pub fn slot(&self) -> Result<Slot32, CardanoError> {
         self.slot.try_into()
     }
 
@@ -2077,7 +2077,7 @@ to_from_json!(TimelockExpiry);
 
 #[wasm_bindgen]
 impl TimelockExpiry {
-    pub fn slot(&self) -> Result<Slot32, JsError> {
+    pub fn slot(&self) -> Result<Slot32, CardanoError> {
         self.slot.try_into()
     }
 
@@ -3102,7 +3102,7 @@ impl HeaderBody {
         since = "10.1.0",
         note = "Possible boundary error. Use slot_bignum instead"
     )]
-    pub fn slot(&self) -> Result<Slot32, JsError> {
+    pub fn slot(&self) -> Result<Slot32, CardanoError> {
         self.slot.clone().try_into()
     }
 
@@ -3268,8 +3268,8 @@ to_from_json!(AssetName);
 
 #[wasm_bindgen]
 impl AssetName {
-    pub fn new(name: Vec<u8>) -> Result<AssetName, JsError> {
-        Self::new_impl(name).map_err(|e| JsError::new(&e.to_string()))
+    pub fn new(name: Vec<u8>) -> Result<AssetName, CardanoError> {
+        Self::new_impl(name).map_err(|e| CardanoError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(name: Vec<u8>) -> Result<AssetName, DeserializeError> {

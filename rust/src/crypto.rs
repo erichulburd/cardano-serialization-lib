@@ -63,7 +63,7 @@ impl Bip32PrivateKey {
     /// prv | pub | chaincode
     /// so be careful if you see the term "xprv" as it could refer to either one
     /// our library does not require the pub (instead we compute the pub key when needed)
-    pub fn from_128_xprv(bytes: &[u8]) -> Result<Bip32PrivateKey, JsError> {
+    pub fn from_128_xprv(bytes: &[u8]) -> Result<Bip32PrivateKey, CardanoError> {
         let mut buf = [0; 96];
         buf[0..64].clone_from_slice(&bytes[0..64]);
         buf[64..96].clone_from_slice(&bytes[96..128]);
@@ -83,11 +83,11 @@ impl Bip32PrivateKey {
         buf.to_vec()
     }
 
-    pub fn generate_ed25519_bip32() -> Result<Bip32PrivateKey, JsError> {
+    pub fn generate_ed25519_bip32() -> Result<Bip32PrivateKey, CardanoError> {
         OsRng::new()
             .map(crypto::SecretKey::<crypto::Ed25519Bip32>::generate)
             .map(Bip32PrivateKey)
-            .map_err(|e| JsError::new(&format!("{}", e)))
+            .map_err(|e| CardanoError::new(&format!("{}", e)))
     }
 
     pub fn to_raw_key(&self) -> PrivateKey {
@@ -100,9 +100,9 @@ impl Bip32PrivateKey {
         Bip32PublicKey(self.0.to_public().into())
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<Bip32PrivateKey, JsError> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Bip32PrivateKey, CardanoError> {
         crypto::SecretKey::<crypto::Ed25519Bip32>::from_binary(bytes)
-            .map_err(|e| JsError::new(&format!("{}", e)))
+            .map_err(|e| CardanoError::new(&format!("{}", e)))
             .map(Bip32PrivateKey)
     }
 
@@ -110,10 +110,10 @@ impl Bip32PrivateKey {
         self.0.as_ref().to_vec()
     }
 
-    pub fn from_bech32(bech32_str: &str) -> Result<Bip32PrivateKey, JsError> {
+    pub fn from_bech32(bech32_str: &str) -> Result<Bip32PrivateKey, CardanoError> {
         crypto::SecretKey::try_from_bech32_str(&bech32_str)
             .map(Bip32PrivateKey)
-            .map_err(|_| JsError::new("Invalid secret key"))
+            .map_err(|_| CardanoError::new("Invalid secret key"))
     }
 
     pub fn to_bech32(&self) -> String {
@@ -134,10 +134,10 @@ impl Bip32PrivateKey {
         hex::encode(self.as_bytes())
     }
 
-    pub fn from_hex(hex_str: &str) -> Result<Bip32PrivateKey, JsError> {
+    pub fn from_hex(hex_str: &str) -> Result<Bip32PrivateKey, CardanoError> {
         match hex::decode(hex_str) {
             Ok(data) => Ok(Self::from_bytes(data.as_ref())?),
-            Err(e) => Err(JsError::new(&e.to_string())),
+            Err(e) => Err(CardanoError::new(&e.to_string())),
         }
     }
 }
@@ -171,19 +171,19 @@ impl Bip32PublicKey {
     /// This is why deriving the private key should not fail while deriving
     /// the public key may fail (if the derivation index is invalid).
     ///
-    pub fn derive(&self, index: u32) -> Result<Bip32PublicKey, JsError> {
+    pub fn derive(&self, index: u32) -> Result<Bip32PublicKey, CardanoError> {
         crypto::derive::derive_pk_ed25519(&self.0, index)
             .map(Bip32PublicKey)
-            .map_err(|e| JsError::new(&format! {"{:?}", e}))
+            .map_err(|e| CardanoError::new(&format! {"{:?}", e}))
     }
 
     pub fn to_raw_key(&self) -> PublicKey {
         PublicKey(crypto::derive::to_raw_pk(&self.0))
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<Bip32PublicKey, JsError> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Bip32PublicKey, CardanoError> {
         crypto::PublicKey::<crypto::Ed25519Bip32>::from_binary(bytes)
-            .map_err(|e| JsError::new(&format!("{}", e)))
+            .map_err(|e| CardanoError::new(&format!("{}", e)))
             .map(Bip32PublicKey)
     }
 
@@ -191,10 +191,10 @@ impl Bip32PublicKey {
         self.0.as_ref().to_vec()
     }
 
-    pub fn from_bech32(bech32_str: &str) -> Result<Bip32PublicKey, JsError> {
+    pub fn from_bech32(bech32_str: &str) -> Result<Bip32PublicKey, CardanoError> {
         crypto::PublicKey::try_from_bech32_str(&bech32_str)
             .map(Bip32PublicKey)
-            .map_err(|e| JsError::new(&format!("{}", e)))
+            .map_err(|e| CardanoError::new(&format!("{}", e)))
     }
 
     pub fn to_bech32(&self) -> String {
@@ -211,10 +211,10 @@ impl Bip32PublicKey {
         hex::encode(self.as_bytes())
     }
 
-    pub fn from_hex(hex_str: &str) -> Result<Bip32PublicKey, JsError> {
+    pub fn from_hex(hex_str: &str) -> Result<Bip32PublicKey, CardanoError> {
         match hex::decode(hex_str) {
             Ok(data) => Ok(Self::from_bytes(data.as_ref())?),
-            Err(e) => Err(JsError::new(&e.to_string())),
+            Err(e) => Err(CardanoError::new(&e.to_string())),
         }
     }
 }
@@ -234,20 +234,20 @@ impl PrivateKey {
         self.0.to_public().into()
     }
 
-    pub fn generate_ed25519() -> Result<PrivateKey, JsError> {
+    pub fn generate_ed25519() -> Result<PrivateKey, CardanoError> {
         OsRng::new()
             .map(crypto::SecretKey::<crypto::Ed25519>::generate)
             .map(key::EitherEd25519SecretKey::Normal)
             .map(PrivateKey)
-            .map_err(|e| JsError::new(&format!("{}", e)))
+            .map_err(|e| CardanoError::new(&format!("{}", e)))
     }
 
-    pub fn generate_ed25519extended() -> Result<PrivateKey, JsError> {
+    pub fn generate_ed25519extended() -> Result<PrivateKey, CardanoError> {
         OsRng::new()
             .map(crypto::SecretKey::<crypto::Ed25519Extended>::generate)
             .map(key::EitherEd25519SecretKey::Extended)
             .map(PrivateKey)
-            .map_err(|e| JsError::new(&format!("{}", e)))
+            .map_err(|e| CardanoError::new(&format!("{}", e)))
     }
 
     /// Get private key from its bech32 representation
@@ -258,7 +258,7 @@ impl PrivateKey {
     /// ```javascript
     /// PrivateKey.from_bech32(&#39;ed25519e_sk1gqwl4szuwwh6d0yk3nsqcc6xxc3fpvjlevgwvt60df59v8zd8f8prazt8ln3lmz096ux3xvhhvm3ca9wj2yctdh3pnw0szrma07rt5gl748fp&#39;);
     /// ```
-    pub fn from_bech32(bech32_str: &str) -> Result<PrivateKey, JsError> {
+    pub fn from_bech32(bech32_str: &str) -> Result<PrivateKey, CardanoError> {
         crypto::SecretKey::try_from_bech32_str(&bech32_str)
             .map(key::EitherEd25519SecretKey::Extended)
             .or_else(|_| {
@@ -266,7 +266,7 @@ impl PrivateKey {
                     .map(key::EitherEd25519SecretKey::Normal)
             })
             .map(PrivateKey)
-            .map_err(|_| JsError::new("Invalid secret key"))
+            .map_err(|_| CardanoError::new("Invalid secret key"))
     }
 
     pub fn to_bech32(&self) -> String {
@@ -283,18 +283,18 @@ impl PrivateKey {
         }
     }
 
-    pub fn from_extended_bytes(bytes: &[u8]) -> Result<PrivateKey, JsError> {
+    pub fn from_extended_bytes(bytes: &[u8]) -> Result<PrivateKey, CardanoError> {
         crypto::SecretKey::from_binary(bytes)
             .map(key::EitherEd25519SecretKey::Extended)
             .map(PrivateKey)
-            .map_err(|_| JsError::new("Invalid extended secret key"))
+            .map_err(|_| CardanoError::new("Invalid extended secret key"))
     }
 
-    pub fn from_normal_bytes(bytes: &[u8]) -> Result<PrivateKey, JsError> {
+    pub fn from_normal_bytes(bytes: &[u8]) -> Result<PrivateKey, CardanoError> {
         crypto::SecretKey::from_binary(bytes)
             .map(key::EitherEd25519SecretKey::Normal)
             .map(PrivateKey)
-            .map_err(|_| JsError::new("Invalid normal secret key"))
+            .map_err(|_| CardanoError::new("Invalid normal secret key"))
     }
 
     pub fn sign(&self, message: &[u8]) -> Ed25519Signature {
@@ -305,10 +305,10 @@ impl PrivateKey {
         hex::encode(self.as_bytes())
     }
 
-    pub fn from_hex(hex_str: &str) -> Result<PrivateKey, JsError> {
+    pub fn from_hex(hex_str: &str) -> Result<PrivateKey, CardanoError> {
         let data: Vec<u8> = match hex::decode(hex_str) {
             Ok(d) => d,
-            Err(e) => return Err(JsError::new(&e.to_string())),
+            Err(e) => return Err(CardanoError::new(&e.to_string())),
         };
         let data_slice: &[u8] = data.as_slice();
         crypto::SecretKey::from_binary(data_slice)
@@ -318,7 +318,7 @@ impl PrivateKey {
                     .map(key::EitherEd25519SecretKey::Extended)
             })
             .map(PrivateKey)
-            .map_err(|_| JsError::new("Invalid secret key"))
+            .map_err(|_| CardanoError::new("Invalid secret key"))
     }
 }
 
@@ -340,10 +340,10 @@ impl PublicKey {
     /// ```javascript
     /// const pkey = PublicKey.from_bech32(&#39;ed25519_pk1dgaagyh470y66p899txcl3r0jaeaxu6yd7z2dxyk55qcycdml8gszkxze2&#39;);
     /// ```
-    pub fn from_bech32(bech32_str: &str) -> Result<PublicKey, JsError> {
+    pub fn from_bech32(bech32_str: &str) -> Result<PublicKey, CardanoError> {
         crypto::PublicKey::try_from_bech32_str(&bech32_str)
             .map(PublicKey)
-            .map_err(|_| JsError::new("Malformed public key"))
+            .map_err(|_| CardanoError::new("Malformed public key"))
     }
 
     pub fn to_bech32(&self) -> String {
@@ -354,9 +354,9 @@ impl PublicKey {
         self.0.as_ref().to_vec()
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<PublicKey, JsError> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<PublicKey, CardanoError> {
         crypto::PublicKey::from_binary(bytes)
-            .map_err(|e| JsError::new(&format!("{}", e)))
+            .map_err(|e| CardanoError::new(&format!("{}", e)))
             .map(PublicKey)
     }
 
@@ -372,10 +372,10 @@ impl PublicKey {
         hex::encode(self.as_bytes())
     }
 
-    pub fn from_hex(hex_str: &str) -> Result<PublicKey, JsError> {
+    pub fn from_hex(hex_str: &str) -> Result<PublicKey, CardanoError> {
         match hex::decode(hex_str) {
             Ok(data) => Ok(Self::from_bytes(data.as_ref())?),
-            Err(e) => Err(JsError::new(&e.to_string())),
+            Err(e) => Err(CardanoError::new(&e.to_string())),
         }
     }
 }
@@ -851,15 +851,15 @@ macro_rules! impl_signature {
                 hex::encode(&self.0.as_ref())
             }
 
-            pub fn from_bech32(bech32_str: &str) -> Result<$name, JsError> {
+            pub fn from_bech32(bech32_str: &str) -> Result<$name, CardanoError> {
                 crypto::Signature::try_from_bech32_str(&bech32_str)
                     .map($name)
-                    .map_err(|e| JsError::new(&format!("{}", e)))
+                    .map_err(|e| CardanoError::new(&format!("{}", e)))
             }
 
-            pub fn from_hex(input: &str) -> Result<$name, JsError> {
+            pub fn from_hex(input: &str) -> Result<$name, CardanoError> {
                 crypto::Signature::from_str(input)
-                    .map_err(|e| JsError::new(&format!("{:?}", e)))
+                    .map_err(|e| CardanoError::new(&format!("{:?}", e)))
                     .map($name)
             }
         }
@@ -962,14 +962,14 @@ macro_rules! impl_hash_type {
                 self.0.to_vec()
             }
 
-            pub fn to_bech32(&self, prefix: &str) -> Result<String, JsError> {
+            pub fn to_bech32(&self, prefix: &str) -> Result<String, CardanoError> {
                 bech32::encode(&prefix, self.to_bytes().to_base32())
-                    .map_err(|e| JsError::new(&format! {"{:?}", e}))
+                    .map_err(|e| CardanoError::new(&format! {"{:?}", e}))
             }
 
-            pub fn from_bech32(bech_str: &str) -> Result<$name, JsError> {
+            pub fn from_bech32(bech_str: &str) -> Result<$name, CardanoError> {
                 let (_hrp, u5data) =
-                    bech32::decode(bech_str).map_err(|e| JsError::new(&e.to_string()))?;
+                    bech32::decode(bech_str).map_err(|e| CardanoError::new(&e.to_string()))?;
                 let data: Vec<u8> = bech32::FromBase32::from_base32(&u5data).unwrap();
                 Ok(Self::from_bytes(data)?)
             }
@@ -978,10 +978,10 @@ macro_rules! impl_hash_type {
                 hex::encode(&self.0)
             }
 
-            pub fn from_hex(hex: &str) -> Result<$name, JsError> {
+            pub fn from_hex(hex: &str) -> Result<$name, CardanoError> {
                 let bytes = hex::decode(hex)
-                    .map_err(|e| JsError::new(&format!("hex decode failed: {}", e)))?;
-                Self::from_bytes(bytes).map_err(|e| JsError::new(&format!("{:?}", e)))
+                    .map_err(|e| CardanoError::new(&format!("hex decode failed: {}", e)))?;
+                Self::from_bytes(bytes).map_err(|e| CardanoError::new(&format!("{:?}", e)))
             }
         }
 
@@ -1070,9 +1070,9 @@ pub struct LegacyDaedalusPrivateKey(pub(crate) crypto::SecretKey<crypto::LegacyD
 
 #[wasm_bindgen]
 impl LegacyDaedalusPrivateKey {
-    pub fn from_bytes(bytes: &[u8]) -> Result<LegacyDaedalusPrivateKey, JsError> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<LegacyDaedalusPrivateKey, CardanoError> {
         crypto::SecretKey::<crypto::LegacyDaedalus>::from_binary(bytes)
-            .map_err(|e| JsError::new(&format!("{}", e)))
+            .map_err(|e| CardanoError::new(&format!("{}", e)))
             .map(LegacyDaedalusPrivateKey)
     }
 
@@ -1229,13 +1229,13 @@ impl Nonce {
         Self { hash: None }
     }
 
-    pub fn new_from_hash(hash: Vec<u8>) -> Result<Nonce, JsError> {
+    pub fn new_from_hash(hash: Vec<u8>) -> Result<Nonce, CardanoError> {
         use std::convert::TryInto;
         match hash[..Self::HASH_LEN].try_into() {
             Ok(bytes_correct_size) => Ok(Self {
                 hash: Some(bytes_correct_size),
             }),
-            Err(e) => Err(JsError::new(&e.to_string())),
+            Err(e) => Err(CardanoError::new(&e.to_string())),
         }
     }
 
@@ -1338,9 +1338,9 @@ impl VRFCert {
         self.proof.clone()
     }
 
-    pub fn new(output: Vec<u8>, proof: Vec<u8>) -> Result<VRFCert, JsError> {
+    pub fn new(output: Vec<u8>, proof: Vec<u8>) -> Result<VRFCert, CardanoError> {
         if proof.len() != Self::PROOF_LEN {
-            return Err(JsError::new(&format!(
+            return Err(CardanoError::new(&format!(
                 "proof len must be {} - found {}",
                 Self::PROOF_LEN,
                 proof.len()
