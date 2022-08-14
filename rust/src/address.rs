@@ -265,7 +265,7 @@ impl ByronAddress {
             magic if magic == NetworkInfo::testnet().protocol_magic() => {
                 Ok(NetworkInfo::testnet().network_id())
             }
-            _ => Err(JsError::from_str(
+            _ => Err(JsError::new(
                 &format! {"Unknown network {}", protocol_magic},
             )),
         }
@@ -274,7 +274,7 @@ impl ByronAddress {
     pub fn from_base58(s: &str) -> Result<ByronAddress, JsError> {
         use std::str::FromStr;
         ExtendedAddr::from_str(s)
-            .map_err(|e| JsError::from_str(&format! {"{:?}", e}))
+            .map_err(|e| JsError::new(&format! {"{:?}", e}))
             .map(ByronAddress)
     }
 
@@ -374,7 +374,7 @@ impl Address {
     pub fn from_hex(hex_str: &str) -> Result<Address, JsError> {
         match hex::decode(hex_str) {
             Ok(data) => Ok(Self::from_bytes_impl(data.as_ref())?),
-            Err(e) => Err(JsError::from_str(&e.to_string())),
+            Err(e) => Err(JsError::new(&e.to_string())),
         }
     }
 
@@ -575,12 +575,12 @@ impl Address {
             }
         };
         bech32::encode(&final_prefix, self.to_bytes().to_base32())
-            .map_err(|e| JsError::from_str(&format! {"{:?}", e}))
+            .map_err(|e| JsError::new(&format! {"{:?}", e}))
     }
 
     pub fn from_bech32(bech_str: &str) -> Result<Address, JsError> {
         let (_hrp, u5data) =
-            bech32::decode(bech_str).map_err(|e| JsError::from_str(&e.to_string()))?;
+            bech32::decode(bech_str).map_err(|e| JsError::new(&e.to_string()))?;
         let data: Vec<u8> = bech32::FromBase32::from_base32(&u5data).unwrap();
         Ok(Self::from_bytes_impl(data.as_ref())?)
     }

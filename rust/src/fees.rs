@@ -66,7 +66,7 @@ pub fn calculate_ex_units_ceil_cost(
     let (total_num, total_denum) = sum(&mem_ratio, &steps_ratio);
     match total_num.div_ceil(&total_denum).as_u64() {
         Some(coin) => Ok(coin),
-        _ => Err(JsError::from_str(&format!(
+        _ => Err(JsError::new(&format!(
             "Failed to calculate ceil from ratio {}/{}",
             total_num.to_str(),
             total_denum.to_str(),

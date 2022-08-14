@@ -50,7 +50,7 @@ impl TransactionOutputBuilder {
 
     pub fn next(&self) -> Result<TransactionOutputAmountBuilder, JsError> {
         Ok(TransactionOutputAmountBuilder {
-            address: self.address.clone().ok_or(JsError::from_str(
+            address: self.address.clone().ok_or(JsError::new(
                 "TransactionOutputBaseBuilder: Address missing",
             ))?,
             amount: None,
@@ -147,7 +147,7 @@ impl TransactionOutputAmountBuilder {
     pub fn build(&self) -> Result<TransactionOutput, JsError> {
         Ok(TransactionOutput {
             address: self.address.clone(),
-            amount: self.amount.clone().ok_or(JsError::from_str(
+            amount: self.amount.clone().ok_or(JsError::new(
                 "TransactionOutputAmountBuilder: amount missing",
             ))?,
             plutus_data: self.data.clone(),

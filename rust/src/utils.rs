@@ -36,18 +36,18 @@ macro_rules! to_from_json {
         impl $name {
             pub fn to_json(&self) -> Result<String, JsError> {
                 serde_json::to_string_pretty(&self)
-                    .map_err(|e| JsError::from_str(&format!("to_json: {}", e)))
+                    .map_err(|e| JsError::new(&format!("to_json: {}", e)))
             }
 
             #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
             pub fn to_js_value(&self) -> Result<JsValue, JsError> {
                 JsValue::from_serde(&self)
-                    .map_err(|e| JsError::from_str(&format!("to_js_value: {}", e)))
+                    .map_err(|e| JsError::new(&format!("to_js_value: {}", e)))
             }
 
             pub fn from_json(json: &str) -> Result<$name, JsError> {
                 serde_json::from_str(json)
-                    .map_err(|e| JsError::from_str(&format!("from_json: {}", e)))
+                    .map_err(|e| JsError::new(&format!("from_json: {}", e)))
             }
         }
     };
@@ -181,7 +181,7 @@ impl BigNum {
     pub fn from_str(string: &str) -> Result<BigNum, JsError> {
         string
             .parse::<u64>()
-            .map_err(|e| JsError::from_str(&format! {"{:?}", e}))
+            .map_err(|e| JsError::new(&format! {"{:?}", e}))
             .map(BigNum)
     }
 
@@ -211,21 +211,21 @@ impl BigNum {
     pub fn checked_mul(&self, other: &BigNum) -> Result<BigNum, JsError> {
         match self.0.checked_mul(other.0) {
             Some(value) => Ok(BigNum(value)),
-            None => Err(JsError::from_str("overflow")),
+            None => Err(JsError::new("overflow")),
         }
     }
 
     pub fn checked_add(&self, other: &BigNum) -> Result<BigNum, JsError> {
         match self.0.checked_add(other.0) {
             Some(value) => Ok(BigNum(value)),
-            None => Err(JsError::from_str("overflow")),
+            None => Err(JsError::new("overflow")),
         }
     }
 
     pub fn checked_sub(&self, other: &BigNum) -> Result<BigNum, JsError> {
         match self.0.checked_sub(other.0) {
             Some(value) => Ok(BigNum(value)),
-            None => Err(JsError::from_str("underflow")),
+            None => Err(JsError::new("underflow")),
         }
     }
 
@@ -255,7 +255,7 @@ impl TryFrom<BigNum> for u32 {
 
     fn try_from(value: BigNum) -> Result<Self, Self::Error> {
         if value.0 > u32::MAX.into() {
-            Err(JsError::from_str(&format!(
+            Err(JsError::new(&format!(
                 "Value {} is bigger than max u32 {}",
                 value.0,
                 u32::MAX
@@ -678,7 +678,7 @@ impl Int {
     /// JsError in case of out of boundary overflow
     pub fn as_i32_or_fail(&self) -> Result<i32, JsError> {
         use std::convert::TryFrom;
-        i32::try_from(self.0).map_err(|e| JsError::from_str(&format!("{}", e)))
+        i32::try_from(self.0).map_err(|e| JsError::new(&format!("{}", e)))
     }
 
     /// Returns string representation of the underlying i128 value directly.
@@ -691,9 +691,9 @@ impl Int {
     pub fn from_str(string: &str) -> Result<Int, JsError> {
         let x = string
             .parse::<i128>()
-            .map_err(|e| JsError::from_str(&format! {"{:?}", e}))?;
+            .map_err(|e| JsError::new(&format! {"{:?}", e}))?;
         if x.abs() > u64::MAX as i128 {
-            return Err(JsError::from_str(&format!(
+            return Err(JsError::new(&format!(
                 "{} out of bounds. Value (without sign) must fit within 4 bytes limit of {}",
                 x,
                 u64::MAX
@@ -952,7 +952,7 @@ impl BigInt {
     pub fn from_str(text: &str) -> Result<BigInt, JsError> {
         use std::str::FromStr;
         num_bigint::BigInt::from_str(text)
-            .map_err(|e| JsError::from_str(&format! {"{:?}", e}))
+            .map_err(|e| JsError::new(&format! {"{:?}", e}))
             .map(Self)
     }
 
@@ -1459,7 +1459,7 @@ pub fn encode_json_str_to_native_script(
     schema: ScriptSchema,
 ) -> Result<NativeScript, JsError> {
     let value: serde_json::Value =
-        serde_json::from_str(&json).map_err(|e| JsError::from_str(&e.to_string()))?;
+        serde_json::from_str(&json).map_err(|e| JsError::new(&e.to_string()))?;
 
     let native_script = match schema {
         ScriptSchema::Wallet => encode_wallet_value_to_native_script(value, self_xpub)?,
@@ -1488,11 +1488,11 @@ fn encode_wallet_value_to_native_script(
                             cosigners.insert(key.to_owned(), xpub.to_owned());
                         }
                     } else {
-                        return Err(JsError::from_str("cosigner value must be a string"));
+                        return Err(JsError::new("cosigner value must be a string"));
                     }
                 }
             } else {
-                return Err(JsError::from_str("cosigners must be a map"));
+                return Err(JsError::new("cosigners must be a map"));
             }
 
             let template = map.get("template").unwrap();
@@ -1501,7 +1501,7 @@ fn encode_wallet_value_to_native_script(
 
             Ok(template_native_script)
         }
-        _ => Err(JsError::from_str(
+        _ => Err(JsError::new(
             "top level must be an object. cosigners and template keys are required",
         )),
     }
@@ -1514,7 +1514,7 @@ fn encode_template_to_native_script(
     match template {
         serde_json::Value::String(cosigner) => {
             if let Some(xpub) = cosigners.get(cosigner) {
-                let bytes = Vec::from_hex(xpub).map_err(|e| JsError::from_str(&e.to_string()))?;
+                let bytes = Vec::from_hex(xpub).map_err(|e| JsError::new(&e.to_string()))?;
 
                 let public_key = Bip32PublicKey::from_bytes(&bytes)?;
 
@@ -1522,7 +1522,7 @@ fn encode_template_to_native_script(
                     &public_key.to_raw_key().hash(),
                 )))
             } else {
-                Err(JsError::from_str(&format!(
+                Err(JsError::new(&format!(
                     "cosigner {} not found",
                     cosigner
                 )))
@@ -1536,7 +1536,7 @@ fn encode_template_to_native_script(
                     all.add(&encode_template_to_native_script(val, cosigners)?);
                 }
             } else {
-                return Err(JsError::from_str("all must be an array"));
+                return Err(JsError::new("all must be an array"));
             }
 
             Ok(NativeScript::new_script_all(&ScriptAll::new(&all)))
@@ -1549,7 +1549,7 @@ fn encode_template_to_native_script(
                     any.add(&encode_template_to_native_script(val, cosigners)?);
                 }
             } else {
-                return Err(JsError::from_str("any must be an array"));
+                return Err(JsError::new("any must be an array"));
             }
 
             Ok(NativeScript::new_script_any(&ScriptAny::new(&any)))
@@ -1563,10 +1563,10 @@ fn encode_template_to_native_script(
                         if let Some(n) = at_least.as_u64() {
                             n as u32
                         } else {
-                            return Err(JsError::from_str("at_least must be an integer"));
+                            return Err(JsError::new("at_least must be an integer"));
                         }
                     } else {
-                        return Err(JsError::from_str("at_least must be an integer"));
+                        return Err(JsError::new("at_least must be an integer"));
                     };
 
                     let mut from_scripts = NativeScripts::new();
@@ -1576,7 +1576,7 @@ fn encode_template_to_native_script(
                             from_scripts.add(&encode_template_to_native_script(val, cosigners)?);
                         }
                     } else {
-                        return Err(JsError::from_str("from must be an array"));
+                        return Err(JsError::new("from must be an array"));
                     }
 
                     Ok(NativeScript::new_script_n_of_k(&ScriptNOfK::new(
@@ -1584,10 +1584,10 @@ fn encode_template_to_native_script(
                         &from_scripts,
                     )))
                 } else {
-                    Err(JsError::from_str("some must contain at_least and from"))
+                    Err(JsError::new("some must contain at_least and from"))
                 }
             } else {
-                Err(JsError::from_str("some must be an object"))
+                Err(JsError::new("some must be an object"))
             }
         }
         serde_json::Value::Object(map) if map.contains_key("active_from") => {
@@ -1599,12 +1599,12 @@ fn encode_template_to_native_script(
 
                     Ok(NativeScript::new_timelock_start(&time_lock_start))
                 } else {
-                    Err(JsError::from_str(
+                    Err(JsError::new(
                         "active_from slot must be an integer greater than or equal to 0",
                     ))
                 }
             } else {
-                Err(JsError::from_str("active_from slot must be a number"))
+                Err(JsError::new("active_from slot must be a number"))
             }
         }
         serde_json::Value::Object(map) if map.contains_key("active_until") => {
@@ -1616,15 +1616,15 @@ fn encode_template_to_native_script(
 
                     Ok(NativeScript::new_timelock_expiry(&time_lock_expiry))
                 } else {
-                    Err(JsError::from_str(
+                    Err(JsError::new(
                         "active_until slot must be an integer greater than or equal to 0",
                     ))
                 }
             } else {
-                Err(JsError::from_str("active_until slot must be a number"))
+                Err(JsError::new("active_until slot must be a number"))
             }
         }
-        _ => Err(JsError::from_str("invalid template format")),
+        _ => Err(JsError::new("invalid template format")),
     }
 }
 

@@ -60,7 +60,7 @@ macro_rules! from_hex {
             pub fn from_hex($data: &str) -> Result<$name, JsError> {
                 match hex::decode($data) {
                     Ok(_) => Ok($body?),
-                    Err(e) => Err(JsError::from_str(&e.to_string()))
+                    Err(e) => Err(JsError::new(&e.to_string()))
                 }
 
             }

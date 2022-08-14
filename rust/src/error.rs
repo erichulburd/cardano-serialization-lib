@@ -132,7 +132,7 @@ impl std::fmt::Display for DeserializeError {
 
 impl From<DeserializeError> for JsError {
     fn from(e: DeserializeError) -> JsError {
-        JsError::from_str(&e.to_string())
+        JsError::new(&e.to_string())
     }
 }
 
@@ -184,9 +184,9 @@ pub struct JsError {
     msg: String,
 }
 
-// #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
+#[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
 impl JsError {
-    pub fn from_str(s: &str) -> Self {
+    pub fn new(s: &str) -> Self {
         Self { msg: s.to_owned() }
     }
 

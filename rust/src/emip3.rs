@@ -38,27 +38,27 @@ pub fn encrypt_with_password(
 ) -> Result<String, JsError> {
     use password_encryption_parameter::*;
 
-    let password = hex::decode(password).map_err(|e| JsError::from_str(&e.to_string()))?;
-    let salt = hex::decode(salt).map_err(|e| JsError::from_str(&e.to_string()))?;
-    let nonce = hex::decode(nonce).map_err(|e| JsError::from_str(&e.to_string()))?;
-    let data = hex::decode(data).map_err(|e| JsError::from_str(&e.to_string()))?;
+    let password = hex::decode(password).map_err(|e| JsError::new(&e.to_string()))?;
+    let salt = hex::decode(salt).map_err(|e| JsError::new(&e.to_string()))?;
+    let nonce = hex::decode(nonce).map_err(|e| JsError::new(&e.to_string()))?;
+    let data = hex::decode(data).map_err(|e| JsError::new(&e.to_string()))?;
 
     if salt.len() != SALT_SIZE {
-        return Err(JsError::from_str(&format!(
+        return Err(JsError::new(&format!(
             "salt len must be {}, found {} bytes",
             SALT_SIZE,
             salt.len()
         )));
     }
     if nonce.len() != NONCE_SIZE {
-        return Err(JsError::from_str(&format!(
+        return Err(JsError::new(&format!(
             "nonce len must be {}, found {} bytes",
             NONCE_SIZE,
             nonce.len()
         )));
     }
     if password.len() == 0 {
-        return Err(JsError::from_str("Password len cannot be 0"));
+        return Err(JsError::new("Password len cannot be 0"));
     }
 
     let key = {
@@ -86,12 +86,12 @@ pub fn encrypt_with_password(
 #[wasm_bindgen]
 pub fn decrypt_with_password(password: &str, data: &str) -> Result<String, JsError> {
     use password_encryption_parameter::*;
-    let password = hex::decode(password).map_err(|e| JsError::from_str(&e.to_string()))?;
-    let data = hex::decode(data).map_err(|e| JsError::from_str(&e.to_string()))?;
+    let password = hex::decode(password).map_err(|e| JsError::new(&e.to_string()))?;
+    let data = hex::decode(data).map_err(|e| JsError::new(&e.to_string()))?;
 
     if data.len() <= METADATA_SIZE {
         // not enough input to decrypt.
-        return Err(JsError::from_str("Missing input data"));
+        return Err(JsError::new("Missing input data"));
     }
 
     let salt = &data[SALT_START..SALT_END];
@@ -113,7 +113,7 @@ pub fn decrypt_with_password(password: &str, data: &str) -> Result<String, JsErr
     if decryption_succeed {
         Ok(decrypted.encode_hex::<String>())
     } else {
-        Err(JsError::from_str("Decryption error"))
+        Err(JsError::new("Decryption error"))
     }
 }
 

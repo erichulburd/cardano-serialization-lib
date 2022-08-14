@@ -1354,7 +1354,7 @@ to_from_json!(Ipv4);
 #[wasm_bindgen]
 impl Ipv4 {
     pub fn new(data: Vec<u8>) -> Result<Ipv4, JsError> {
-        Self::new_impl(data).map_err(|e| JsError::from_str(&e.to_string()))
+        Self::new_impl(data).map_err(|e| JsError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(data: Vec<u8>) -> Result<Ipv4, DeserializeError> {
@@ -1386,7 +1386,7 @@ to_from_json!(Ipv6);
 #[wasm_bindgen]
 impl Ipv6 {
     pub fn new(data: Vec<u8>) -> Result<Ipv6, JsError> {
-        Self::new_impl(data).map_err(|e| JsError::from_str(&e.to_string()))
+        Self::new_impl(data).map_err(|e| JsError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(data: Vec<u8>) -> Result<Ipv6, DeserializeError> {
@@ -1418,7 +1418,7 @@ to_from_bytes!(URL);
 #[wasm_bindgen]
 impl URL {
     pub fn new(url: String) -> Result<URL, JsError> {
-        Self::new_impl(url).map_err(|e| JsError::from_str(&e.to_string()))
+        Self::new_impl(url).map_err(|e| JsError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(url: String) -> Result<URL, DeserializeError> {
@@ -1454,7 +1454,7 @@ to_from_bytes!(DNSRecordAorAAAA);
 #[wasm_bindgen]
 impl DNSRecordAorAAAA {
     pub fn new(dns_name: String) -> Result<DNSRecordAorAAAA, JsError> {
-        Self::new_impl(dns_name).map_err(|e| JsError::from_str(&e.to_string()))
+        Self::new_impl(dns_name).map_err(|e| JsError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(dns_name: String) -> Result<DNSRecordAorAAAA, DeserializeError> {
@@ -1488,7 +1488,7 @@ to_from_bytes!(DNSRecordSRV);
 #[wasm_bindgen]
 impl DNSRecordSRV {
     pub fn new(dns_name: String) -> Result<DNSRecordSRV, JsError> {
-        Self::new_impl(dns_name).map_err(|e| JsError::from_str(&e.to_string()))
+        Self::new_impl(dns_name).map_err(|e| JsError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(dns_name: String) -> Result<DNSRecordSRV, DeserializeError> {
@@ -3269,7 +3269,7 @@ to_from_json!(AssetName);
 #[wasm_bindgen]
 impl AssetName {
     pub fn new(name: Vec<u8>) -> Result<AssetName, JsError> {
-        Self::new_impl(name).map_err(|e| JsError::from_str(&e.to_string()))
+        Self::new_impl(name).map_err(|e| JsError::new(&e.to_string()))
     }
 
     pub(crate) fn new_impl(name: Vec<u8>) -> Result<AssetName, DeserializeError> {

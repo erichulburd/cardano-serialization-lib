@@ -49,7 +49,7 @@ impl MetadataMap {
         self.0
             .get(key)
             .map(|v| v.clone())
-            .ok_or_else(|| JsError::from_str(&format!("key {:?} not found", key)))
+            .ok_or_else(|| JsError::new(&format!("key {:?} not found", key)))
     }
 
     // convenience function for retrieving a string key
@@ -142,7 +142,7 @@ impl TransactionMetadatum {
 
     pub fn new_bytes(bytes: Vec<u8>) -> Result<TransactionMetadatum, JsError> {
         if bytes.len() > MD_MAX_LEN {
-            Err(JsError::from_str(&format!(
+            Err(JsError::new(&format!(
                 "Max metadata bytes too long: {}, max = {}",
                 bytes.len(),
                 MD_MAX_LEN
@@ -154,7 +154,7 @@ impl TransactionMetadatum {
 
     pub fn new_text(text: String) -> Result<TransactionMetadatum, JsError> {
         if text.len() > MD_MAX_LEN {
-            Err(JsError::from_str(&format!(
+            Err(JsError::new(&format!(
                 "Max metadata string too long: {}, max = {}",
                 text.len(),
                 MD_MAX_LEN
@@ -177,35 +177,35 @@ impl TransactionMetadatum {
     pub fn as_map(&self) -> Result<MetadataMap, JsError> {
         match &self.0 {
             TransactionMetadatumEnum::MetadataMap(x) => Ok(x.clone()),
-            _ => Err(JsError::from_str("not a map")),
+            _ => Err(JsError::new("not a map")),
         }
     }
 
     pub fn as_list(&self) -> Result<MetadataList, JsError> {
         match &self.0 {
             TransactionMetadatumEnum::MetadataList(x) => Ok(x.clone()),
-            _ => Err(JsError::from_str("not a list")),
+            _ => Err(JsError::new("not a list")),
         }
     }
 
     pub fn as_int(&self) -> Result<Int, JsError> {
         match &self.0 {
             TransactionMetadatumEnum::Int(x) => Ok(x.clone()),
-            _ => Err(JsError::from_str("not an int")),
+            _ => Err(JsError::new("not an int")),
         }
     }
 
     pub fn as_bytes(&self) -> Result<Vec<u8>, JsError> {
         match &self.0 {
             TransactionMetadatumEnum::Bytes(x) => Ok(x.clone()),
-            _ => Err(JsError::from_str("not bytes")),
+            _ => Err(JsError::new("not bytes")),
         }
     }
 
     pub fn as_text(&self) -> Result<String, JsError> {
         match &self.0 {
             TransactionMetadatumEnum::Text(x) => Ok(x.clone()),
-            _ => Err(JsError::from_str("not text")),
+            _ => Err(JsError::new("not text")),
         }
     }
 }
@@ -504,7 +504,7 @@ pub fn encode_json_str_to_metadatum(
     json: String,
     schema: MetadataJsonSchema,
 ) -> Result<TransactionMetadatum, JsError> {
-    let value = serde_json::from_str(&json).map_err(|e| JsError::from_str(&e.to_string()))?;
+    let value = serde_json::from_str(&json).map_err(|e| JsError::new(&e.to_string()))?;
     encode_json_value_to_metadatum(value, schema)
 }
 
@@ -523,7 +523,7 @@ pub fn encode_json_value_to_metadatum(
                 &utils::to_bignum(-x as u64),
             )))
         } else {
-            Err(JsError::from_str("floats not allowed in metadata"))
+            Err(JsError::new("floats not allowed in metadata"))
         }
     }
     fn encode_string(
@@ -551,8 +551,8 @@ pub fn encode_json_value_to_metadatum(
     }
     match schema {
         MetadataJsonSchema::NoConversions | MetadataJsonSchema::BasicConversions => match value {
-            Value::Null => Err(JsError::from_str("null not allowed in metadata")),
-            Value::Bool(_) => Err(JsError::from_str("bools not allowed in metadata")),
+            Value::Null => Err(JsError::new("null not allowed in metadata")),
+            Value::Bool(_) => Err(JsError::new("bools not allowed in metadata")),
             Value::Number(x) => encode_number(x),
             Value::String(s) => encode_string(s, schema),
             Value::Array(json_arr) => encode_array(json_arr, schema),
@@ -577,7 +577,7 @@ pub fn encode_json_value_to_metadatum(
             Value::Object(obj) if obj.len() == 1 => {
                 let (k, v) = obj.into_iter().next().unwrap();
                 fn tag_mismatch() -> JsError {
-                    JsError::from_str("key does not match type")
+                    JsError::new("key does not match type")
                 }
                 match k.as_str() {
                     "int" => match v {
@@ -589,7 +589,7 @@ pub fn encode_json_value_to_metadatum(
                     }
                     "bytes" => match hex::decode(v.as_str().ok_or_else(tag_mismatch)?) {
                         Ok(bytes) => TransactionMetadatum::new_bytes(bytes),
-                        Err(_) => Err(JsError::from_str(
+                        Err(_) => Err(JsError::new(
                             "invalid hex string in tagged byte-object",
                         )),
                     },
@@ -597,7 +597,7 @@ pub fn encode_json_value_to_metadatum(
                     "map" => {
                         let mut map = MetadataMap::new();
                         fn map_entry_err() -> JsError {
-                            JsError::from_str("entry format in detailed schema map object not correct. Needs to be of form {\"k\": \"key\", \"v\": value}")
+                            JsError::new("entry format in detailed schema map object not correct. Needs to be of form {\"k\": \"key\", \"v\": value}")
                         }
                         for entry in v.as_array().ok_or_else(tag_mismatch)? {
                             let entry_obj = entry.as_object().ok_or_else(map_entry_err)?;
@@ -611,13 +611,13 @@ pub fn encode_json_value_to_metadatum(
                         }
                         Ok(TransactionMetadatum::new_map(&map))
                     }
-                    invalid_key => Err(JsError::from_str(&format!(
+                    invalid_key => Err(JsError::new(&format!(
                         "key '{}' in tagged object not valid",
                         invalid_key
                     ))),
                 }
             }
-            _ => Err(JsError::from_str(
+            _ => Err(JsError::new(
                 "DetailedSchema requires types to be tagged objects",
             )),
         },
@@ -631,7 +631,7 @@ pub fn decode_metadatum_to_json_str(
     schema: MetadataJsonSchema,
 ) -> Result<String, JsError> {
     let value = decode_metadatum_to_json_value(metadatum, schema)?;
-    serde_json::to_string(&value).map_err(|e| JsError::from_str(&e.to_string()))
+    serde_json::to_string(&value).map_err(|e| JsError::new(&e.to_string()))
 }
 
 pub fn decode_metadatum_to_json_value(
@@ -655,7 +655,7 @@ pub fn decode_metadatum_to_json_value(
                 } else {
                     i64::try_from(i.0).map(|x| x.to_string())
                 };
-                int_str.map_err(|e| JsError::from_str(&e.to_string()))
+                int_str.map_err(|e| JsError::new(&e.to_string()))
             }
             TransactionMetadatumEnum::MetadataList(list)
                 if schema == MetadataJsonSchema::DetailedSchema =>
@@ -667,7 +667,7 @@ pub fn decode_metadatum_to_json_value(
             {
                 decode_metadatum_to_json_str(&TransactionMetadatum::new_map(&map), schema)
             }
-            _ => Err(JsError::from_str(&format!(
+            _ => Err(JsError::new(&format!(
                 "key type {:?} not allowed in JSON under specified schema",
                 key.0
             ))),
@@ -718,15 +718,15 @@ pub fn decode_metadatum_to_json_value(
         TransactionMetadatumEnum::Int(x) => (
             "int",
             if x.0 >= 0 {
-                Value::from(u64::try_from(x.0).map_err(|e| JsError::from_str(&e.to_string()))?)
+                Value::from(u64::try_from(x.0).map_err(|e| JsError::new(&e.to_string()))?)
             } else {
-                Value::from(i64::try_from(x.0).map_err(|e| JsError::from_str(&e.to_string()))?)
+                Value::from(i64::try_from(x.0).map_err(|e| JsError::new(&e.to_string()))?)
             },
         ),
         TransactionMetadatumEnum::Bytes(bytes) => (
             "bytes",
             match schema {
-                MetadataJsonSchema::NoConversions => Err(JsError::from_str(
+                MetadataJsonSchema::NoConversions => Err(JsError::new(
                     "bytes not allowed in JSON in specified schema",
                 )),
                 // 0x prefix

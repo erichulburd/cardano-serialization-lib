@@ -150,7 +150,7 @@ fn assert_required_mint_scripts(
     maybe_mint_scripts: Option<&NativeScripts>,
 ) -> Result<(), JsError> {
     if maybe_mint_scripts.is_none_or_empty() {
-        return Err(JsError::from_str(
+        return Err(JsError::new(
             "Mint is present in the builder, but witness scripts are not provided!",
         ));
     }
@@ -159,7 +159,7 @@ fn assert_required_mint_scripts(
         mint_scripts.0.iter().map(|script| script.hash()).collect();
     for mint_hash in mint.keys().0.iter() {
         if !witness_hashes.contains(mint_hash) {
-            return Err(JsError::from_str(&format!(
+            return Err(JsError::new(&format!(
                 "No witness script is found for mint policy '{:?}'! Script is required!",
                 hex::encode(mint_hash.to_bytes()),
             )));
@@ -183,7 +183,7 @@ fn min_fee(tx_builder: &TransactionBuilder) -> Result<Coin, JsError> {
         return fee.checked_add(&script_fee);
     }
     if tx_builder.has_plutus_inputs() {
-        return Err(JsError::from_str(
+        return Err(JsError::new(
             "Plutus inputs are present but ex unit prices are missing in the config!",
         ));
     }
@@ -314,20 +314,20 @@ impl TransactionBuilderConfigBuilder {
         Ok(TransactionBuilderConfig {
             fee_algo: cfg
                 .fee_algo
-                .ok_or(JsError::from_str("uninitialized field: fee_algo"))?,
+                .ok_or(JsError::new("uninitialized field: fee_algo"))?,
             pool_deposit: cfg
                 .pool_deposit
-                .ok_or(JsError::from_str("uninitialized field: pool_deposit"))?,
+                .ok_or(JsError::new("uninitialized field: pool_deposit"))?,
             key_deposit: cfg
                 .key_deposit
-                .ok_or(JsError::from_str("uninitialized field: key_deposit"))?,
+                .ok_or(JsError::new("uninitialized field: key_deposit"))?,
             max_value_size: cfg
                 .max_value_size
-                .ok_or(JsError::from_str("uninitialized field: max_value_size"))?,
+                .ok_or(JsError::new("uninitialized field: max_value_size"))?,
             max_tx_size: cfg
                 .max_tx_size
-                .ok_or(JsError::from_str("uninitialized field: max_tx_size"))?,
-            coins_per_utxo_byte: cfg.coins_per_utxo_byte.ok_or(JsError::from_str(
+                .ok_or(JsError::new("uninitialized field: max_tx_size"))?,
+            coins_per_utxo_byte: cfg.coins_per_utxo_byte.ok_or(JsError::new(
                 "uninitialized field: coins_per_utxo_byte",
             ))?,
             ex_unit_prices: cfg.ex_unit_prices,
@@ -385,7 +385,7 @@ impl TransactionBuilder {
                     .iter()
                     .any(|output| output.amount.multiasset.is_some())
                 {
-                    return Err(JsError::from_str("Multiasset values not supported by LargestFirst. Please use LargestFirstMultiAsset"));
+                    return Err(JsError::new("Multiasset values not supported by LargestFirst. Please use LargestFirstMultiAsset"));
                 }
                 self.cip2_largest_first_by(
                     available_inputs,
@@ -402,7 +402,7 @@ impl TransactionBuilder {
                     .iter()
                     .any(|output| output.amount.multiasset.is_some())
                 {
-                    return Err(JsError::from_str("Multiasset values not supported by RandomImprove. Please use RandomImproveMultiAsset"));
+                    return Err(JsError::new("Multiasset values not supported by RandomImprove. Please use RandomImproveMultiAsset"));
                 }
                 use rand::Rng;
                 let mut rng = rand::thread_rng();
@@ -421,7 +421,7 @@ impl TransactionBuilder {
                 // a specific output, so the improvement algorithm we do above does not apply here.
                 while input_total.coin < output_total.coin {
                     if available_indices.is_empty() {
-                        return Err(JsError::from_str("UTxO Balance Insufficient[x]"));
+                        return Err(JsError::new("UTxO Balance Insufficient[x]"));
                     }
                     let i = *available_indices
                         .iter()
@@ -499,7 +499,7 @@ impl TransactionBuilder {
                 // a specific output, so the improvement algorithm we do above does not apply here.
                 while input_total.coin < output_total.coin {
                     if available_indices.is_empty() {
-                        return Err(JsError::from_str("UTxO Balance Insufficient[x]"));
+                        return Err(JsError::new("UTxO Balance Insufficient[x]"));
                     }
                     let i = *available_indices
                         .iter()
@@ -559,7 +559,7 @@ impl TransactionBuilder {
         if by(input_total).unwrap_or(BigNum::zero())
             < by(output_total).expect("do not call on asset types that aren't in the output")
         {
-            return Err(JsError::from_str("UTxO Balance Insufficient"));
+            return Err(JsError::new("UTxO Balance Insufficient"));
         }
 
         Ok(())
@@ -613,7 +613,7 @@ impl TransactionBuilder {
             let needed = by(&output.amount).unwrap();
             while added < needed {
                 if relevant_indices.is_empty() {
-                    return Err(JsError::from_str("UTxO Balance Insufficient"));
+                    return Err(JsError::new("UTxO Balance Insufficient"));
                 }
                 let random_index = rng.gen_range(0..relevant_indices.len());
                 let i = relevant_indices.swap_remove(random_index);
@@ -691,21 +691,21 @@ impl TransactionBuilder {
     ) -> Result<(), JsError> {
         let collateral = &self.collateral;
         if collateral.len() == 0 {
-            return Err(JsError::from_str(
+            return Err(JsError::new(
                 "Cannot calculate total collateral value when collateral inputs are missing",
             ));
         }
         let col_input_value: Value = collateral.total_value()?;
         let total_col: Value = col_input_value.checked_sub(&collateral_return.amount())?;
         if total_col.multiasset.is_some() {
-            return Err(JsError::from_str(
+            return Err(JsError::new(
                 "Total collateral value cannot contain assets!",
             ));
         }
 
         let min_ada = min_ada_for_output(&collateral_return, &self.config.utxo_cost())?;
         if min_ada > collateral_return.amount.coin {
-            return Err(JsError::from_str(&format!(
+            return Err(JsError::new(&format!(
                 "Not enough coin to make return on the collateral value!\
                  Increase amount of return coins. \
                  Min ada for return {}, but was {}",
@@ -732,7 +732,7 @@ impl TransactionBuilder {
     ) -> Result<(), JsError> {
         let collateral = &self.collateral;
         if collateral.len() == 0 {
-            return Err(JsError::from_str(
+            return Err(JsError::new(
                 "Cannot calculate collateral return when collateral inputs are missing",
             ));
         }
@@ -742,7 +742,7 @@ impl TransactionBuilder {
             let return_output = TransactionOutput::new(return_address, &col_return);
             let min_ada = min_ada_for_output(&return_output, &self.config.utxo_cost())?;
             if min_ada > col_return.coin {
-                return Err(JsError::from_str(&format!(
+                return Err(JsError::new(&format!(
                     "Not enough coin to make return on the collateral value!\
                  Decrease the total collateral value or add more collateral inputs. \
                  Min ada for return {}, but was {}",
@@ -893,14 +893,14 @@ impl TransactionBuilder {
     pub fn add_output(&mut self, output: &TransactionOutput) -> Result<(), JsError> {
         let value_size = output.amount.to_bytes().len();
         if value_size > self.config.max_value_size as usize {
-            return Err(JsError::from_str(&format!(
+            return Err(JsError::new(&format!(
                 "Maximum value size of {} exceeded. Found: {}",
                 self.config.max_value_size, value_size
             )));
         }
         let min_ada = min_ada_for_output(&output, &self.config.utxo_cost())?;
         if output.amount().coin() < min_ada {
-            Err(JsError::from_str(&format!(
+            Err(JsError::new(&format!(
                 "Value {} less than the minimum UTXO value {}",
                 from_bignum(&output.amount().coin()),
                 from_bignum(&min_ada)
@@ -1128,7 +1128,7 @@ impl TransactionBuilder {
         output_coin: &Coin,
     ) -> Result<(), JsError> {
         if !amount.is_positive() {
-            return Err(JsError::from_str("Output value must be positive!"));
+            return Err(JsError::new("Output value must be positive!"));
         }
         let policy_id: PolicyID = policy_script.hash();
         self._add_mint_asset(&policy_id, policy_script, asset_name, amount.clone());
@@ -1158,7 +1158,7 @@ impl TransactionBuilder {
         output_builder: &TransactionOutputAmountBuilder,
     ) -> Result<(), JsError> {
         if !amount.is_positive() {
-            return Err(JsError::from_str("Output value must be positive!"));
+            return Err(JsError::new("Output value must be positive!"));
         }
         let policy_id: PolicyID = policy_script.hash();
         self._add_mint_asset(&policy_id, policy_script, asset_name, amount.clone());
@@ -1283,7 +1283,7 @@ impl TransactionBuilder {
             None => self.min_fee(),
             // generating the change output involves changing the fee
             Some(_x) => {
-                return Err(JsError::from_str(
+                return Err(JsError::new(
                     "Cannot calculate change if fee was explicitly specified",
                 ))
             }
@@ -1304,7 +1304,7 @@ impl TransactionBuilder {
                 self.set_fee(&input_total.checked_sub(&output_total)?.coin());
                 Ok(false)
             }
-            Some(Ordering::Less) => Err(JsError::from_str("Insufficient input in transaction")),
+            Some(Ordering::Less) => Err(JsError::new("Insufficient input in transaction")),
             Some(Ordering::Greater) => {
                 fn has_assets(ma: Option<MultiAsset>) -> bool {
                     ma.map(|assets| assets.len() > 0).unwrap_or(false)
@@ -1478,7 +1478,7 @@ impl TransactionBuilder {
                         )?;
                         if nft_changes.len() == 0 {
                             // this likely should never happen
-                            return Err(JsError::from_str("NFTs too large for change output"));
+                            return Err(JsError::new("NFTs too large for change output"));
                         }
                         // we only add the minimum needed (for now) to cover this output
                         let mut change_value = Value::new(&Coin::zero());
@@ -1513,7 +1513,7 @@ impl TransactionBuilder {
                             let fee_for_change = self.fee_for_output(&change_output)?;
                             new_fee = new_fee.checked_add(&fee_for_change)?;
                             if change_left.coin() < min_ada.checked_add(&new_fee)? {
-                                return Err(JsError::from_str("Not enough ADA leftover to include non-ADA assets in a change address"));
+                                return Err(JsError::new("Not enough ADA leftover to include non-ADA assets in a change address"));
                             }
                             change_left = change_left.checked_sub(&change_value)?;
                             self.add_output(&change_output)?;
@@ -1615,7 +1615,7 @@ impl TransactionBuilder {
                     }
                 }
             }
-            None => Err(JsError::from_str(
+            None => Err(JsError::new(
                 "missing input or output for some native asset",
             )),
         }
@@ -1641,7 +1641,7 @@ impl TransactionBuilder {
                             retained_cost_models.insert(&lang, &cost);
                         }
                         _ => {
-                            return Err(JsError::from_str(&format!(
+                            return Err(JsError::new(&format!(
                                 "Missing cost model for language version: {:?}",
                                 lang
                             )))
@@ -1678,7 +1678,7 @@ impl TransactionBuilder {
     fn build_and_size(&self) -> Result<(TransactionBody, usize), JsError> {
         let fee = self
             .fee
-            .ok_or_else(|| JsError::from_str("Fee not specified"))?;
+            .ok_or_else(|| JsError::new("Fee not specified"))?;
         let built = TransactionBody {
             inputs: self.inputs.inputs(),
             outputs: self.outputs.clone(),
@@ -1721,7 +1721,7 @@ impl TransactionBuilder {
     pub fn build(&self) -> Result<TransactionBody, JsError> {
         let (body, full_tx_size) = self.build_and_size()?;
         if full_tx_size > self.config.max_tx_size as usize {
-            Err(JsError::from_str(&format!(
+            Err(JsError::new(&format!(
                 "Maximum transaction size of {} exceeded. Found: {}",
                 self.config.max_tx_size, full_tx_size
             )))
@@ -1801,18 +1801,18 @@ impl TransactionBuilder {
     /// NOTE: Will fail in case there are any script inputs added with no corresponding witness
     pub fn build_tx(&self) -> Result<Transaction, JsError> {
         if self.count_missing_input_scripts() > 0 {
-            return Err(JsError::from_str(
+            return Err(JsError::new(
                 "There are some script inputs added that don't have the corresponding script provided as a witness!",
             ));
         }
         if self.has_plutus_inputs() {
             if self.script_data_hash.is_none() {
-                return Err(JsError::from_str(
+                return Err(JsError::new(
                     "Plutus inputs are present, but script data hash is not specified",
                 ));
             }
             if self.collateral.len() == 0 {
-                return Err(JsError::from_str(
+                return Err(JsError::new(
                     "Plutus inputs are present, but no collateral inputs are added",
                 ));
             }
